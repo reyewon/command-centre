@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useDashboardStore, IncomeEntry } from '@/lib/store';
+import { useDashboardStore, IncomeEntry, syncToServer, syncFromServer } from '@/lib/store';
 import {
   demoInvoices, demoIncomeEntries, demoAnalytics,
   demoInstagramAccounts, demoStocks, demoBookings
@@ -13,7 +13,7 @@ import {
   Instagram, Globe, Receipt, Clock, MapPin, ArrowUpRight, ArrowDownRight,
   Menu, X, Home, PieChart, Wallet, CalendarDays, Store, Settings,
   Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2,
-  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical, Mail, Bell, BellRing, Volume2
+  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical, Mail, Bell, BellRing, Volume2, Pencil, Check
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -535,6 +535,121 @@ function ThemeToggle() {
   );
 }
 
+// ==================== MOBILE DRAG REORDER ====================
+
+const DEFAULT_OVERVIEW_ORDER = ['stats', 'income', 'enquiries', 'stocks', 'traffic-invoices'];
+
+function useOverviewOrder() {
+  const [order, setOrder] = useState<string[]>(DEFAULT_OVERVIEW_ORDER);
+
+  useEffect(() => {
+    // Try localStorage first for instant load
+    try {
+      const stored = localStorage.getItem('rcc-overview-order');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && DEFAULT_OVERVIEW_ORDER.every(id => parsed.includes(id)) && parsed.length === DEFAULT_OVERVIEW_ORDER.length) {
+          setOrder(parsed);
+        }
+      }
+    } catch {}
+    // Then sync from server (takes priority if available)
+    syncFromServer('overview-order').then((remote) => {
+      if (Array.isArray(remote) && DEFAULT_OVERVIEW_ORDER.every(id => (remote as string[]).includes(id)) && remote.length === DEFAULT_OVERVIEW_ORDER.length) {
+        setOrder(remote as string[]);
+        localStorage.setItem('rcc-overview-order', JSON.stringify(remote));
+      }
+    });
+  }, []);
+
+  const reorder = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setOrder(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      localStorage.setItem('rcc-overview-order', JSON.stringify(next));
+      syncToServer('overview-order', next);
+      return next;
+    });
+  }, []);
+
+  return { order, reorder };
+}
+
+function useTouchReorder(itemCount: number, onReorder: (from: number, to: number) => void) {
+  const [dragging, setDragging] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+  const itemRectsRef = useRef<DOMRect[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const captureRects = useCallback(() => {
+    if (!containerRef.current) return;
+    const children = containerRef.current.querySelectorAll('[data-reorder-item]');
+    itemRectsRef.current = Array.from(children).map(el => el.getBoundingClientRect());
+  }, []);
+
+  const handleTouchStart = useCallback((index: number, e: React.TouchEvent) => {
+    e.stopPropagation();
+    captureRects();
+    setDragging(index);
+    setOverIndex(index);
+  }, [captureRects]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (dragging === null) return;
+    e.stopPropagation();
+    const touch = e.touches[0];
+    const y = touch.clientY;
+
+    // Find which item slot we're over
+    let targetIndex = dragging;
+    for (let i = 0; i < itemRectsRef.current.length; i++) {
+      const rect = itemRectsRef.current[i];
+      const midY = rect.top + rect.height / 2;
+      if (y < midY) {
+        targetIndex = i;
+        break;
+      }
+      targetIndex = i;
+    }
+
+    setOverIndex(targetIndex);
+  }, [dragging]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (dragging !== null && overIndex !== null && dragging !== overIndex) {
+      onReorder(dragging, overIndex);
+    }
+    setDragging(null);
+    setOverIndex(null);
+  }, [dragging, overIndex, onReorder]);
+
+  return {
+    containerRef,
+    dragging,
+    overIndex,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  };
+}
+
+function DragHandle({ index, onTouchStart, editMode }: { index: number; onTouchStart: (index: number, e: React.TouchEvent) => void; editMode: boolean }) {
+  if (!editMode) return null;
+  return (
+    <div
+      className="lg:hidden flex items-center justify-center py-1.5 -mt-1 mb-1 cursor-grab active:cursor-grabbing touch-none animate-fade-in"
+      onTouchStart={(e) => onTouchStart(index, e)}
+    >
+      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/60">
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground font-medium">Drag to reorder</span>
+      </div>
+    </div>
+  );
+}
+
 // ==================== ENQUIRIES GLANCE (OVERVIEW WIDGET) ====================
 
 function EnquiriesGlance() {
@@ -627,7 +742,7 @@ function EnquiriesGlance() {
 
 // ==================== OVERVIEW ====================
 
-function OverviewSection() {
+function OverviewSection({ editMode }: { editMode: boolean }) {
   const { invoices, incomeEntries, analytics, instagramAccounts, bookings, weather, stocks } = useDashboardStore();
   const { time, date } = useLiveClock();
 
@@ -665,26 +780,21 @@ function OverviewSection() {
   const monthProgress = Math.min((totalThisMonth / monthlyGoal) * 100, 100);
   const goalColor = monthProgress < 50 ? 'var(--danger)' : monthProgress < 80 ? 'var(--warning)' : 'var(--success)';
 
-  return (
-    <div className="space-y-6 animate-section-in">
-      <div className="flex items-end justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">{getGreeting()}, Ryan</h2>
-          <p className="text-muted-foreground mt-1">Here's your business at a glance</p>
-        </div>
-        <div className="text-right hidden sm:block">
-          <p className="text-2xl font-mono font-semibold tracking-tight">{time}</p>
-          <p className="text-sm text-muted-foreground">{date}</p>
-        </div>
-      </div>
+  const { order, reorder } = useOverviewOrder();
+  const { containerRef, dragging, overIndex, handleTouchStart, handleTouchMove, handleTouchEnd } = useTouchReorder(order.length, reorder);
 
+  // Widget renderers keyed by ID
+  const widgets: Record<string, React.ReactNode> = {
+    stats: (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard title="Revenue this month" value={formatCurrency(totalThisMonth)} change={12.4} icon={DollarSign} />
         <StatCard title="Outstanding" value={formatCurrency(unpaidTotal)} icon={Receipt} />
         <StatCard title="Website visitors" value={analytics?.users ?? 0} change={analytics?.usersChange} icon={Globe} />
         <StatCard title="IG followers" value={formatNumber(photographyIG?.followers ?? 0)} change={photographyIG && photographyIG.followers > 0 ? (photographyIG.followersChange / photographyIG.followers) * 100 : undefined} icon={Instagram} />
       </div>
+    ),
 
+    income: (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2 flex flex-col">
           <div className="flex items-center justify-between mb-4">
@@ -798,53 +908,55 @@ function OverviewSection() {
           </Card>
         </div>
       </div>
+    ),
 
-      <EnquiriesGlance />
+    enquiries: <EnquiriesGlance />,
 
-      {stocks.length > 0 && (
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-lg">Stock Watch</h3>
-            <div className="flex items-center gap-4">
-              {stocks.map(stock => (
-                <div key={stock.symbol} className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-muted-foreground">{stock.symbol}</span>
-                  <span className="font-mono font-semibold">{(stock.currency === 'GBP' ? '£' : stock.currency === 'EUR' ? '€' : '$')}{stock.currentPrice.toFixed(2)}</span>
-                  <span className={cn('flex items-center gap-0.5 text-sm font-medium', stock.changePercent >= 0 ? 'text-success' : 'text-danger')}>
-                    {stock.changePercent >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
-                    {formatPercent(stock.changePercent)}
+    stocks: stocks.length > 0 ? (
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-lg">Stock Watch</h3>
+          <div className="flex items-center gap-4">
+            {stocks.map(stock => (
+              <div key={stock.symbol} className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground">{stock.symbol}</span>
+                <span className="font-mono font-semibold">{(stock.currency === 'GBP' ? '£' : stock.currency === 'EUR' ? '€' : '$')}{stock.currentPrice.toFixed(2)}</span>
+                <span className={cn('flex items-center gap-0.5 text-sm font-medium', stock.changePercent >= 0 ? 'text-success' : 'text-danger')}>
+                  {stock.changePercent >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+                  {formatPercent(stock.changePercent)}
+                </span>
+                {stock.marketState && (
+                  <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded',
+                    stock.marketState === 'REGULAR' ? 'bg-success-tint text-success' : 'bg-muted text-muted-foreground'
+                  )}>
+                    {stock.marketState === 'REGULAR' ? 'LIVE' : stock.marketState === 'PRE' ? 'PRE' : stock.marketState === 'POST' ? 'AFTER' : 'CLOSED'}
                   </span>
-                  {stock.marketState && (
-                    <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded',
-                      stock.marketState === 'REGULAR' ? 'bg-success-tint text-success' : 'bg-muted text-muted-foreground'
-                    )}>
-                      {stock.marketState === 'REGULAR' ? 'LIVE' : stock.marketState === 'PRE' ? 'PRE' : stock.marketState === 'POST' ? 'AFTER' : 'CLOSED'}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            ))}
           </div>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stocks[0]?.hourly ?? stocks[0]?.history?.slice(-7) ?? []}>
-                <defs>
-                  <linearGradient id="overviewStockGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0.3} />
-                    <stop offset="100%" stopColor={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickFormatter={(v) => `$${v}`} domain={['dataMin - 1', 'dataMax + 1']} />
-                <Tooltip content={<CustomTooltip formatter={(v: any) => `$${Number(v).toFixed(2)}`} />} />
-                <Area type="linear" dataKey="price" stroke={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} fill="url(#overviewStockGrad)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      )}
+        </div>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={stocks[0]?.hourly ?? stocks[0]?.history?.slice(-7) ?? []}>
+              <defs>
+                <linearGradient id="overviewStockGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} interval="preserveStartEnd" />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickFormatter={(v) => `$${v}`} domain={['dataMin - 1', 'dataMax + 1']} />
+              <Tooltip content={<CustomTooltip formatter={(v: any) => `$${Number(v).toFixed(2)}`} />} />
+              <Area type="linear" dataKey="price" stroke={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} fill="url(#overviewStockGrad)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+    ) : null,
 
+    'traffic-invoices': (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <h3 className="font-semibold text-lg mb-4">Website Traffic (30 days)</h3>
@@ -884,6 +996,51 @@ function OverviewSection() {
             )}
           </div>
         </Card>
+      </div>
+    ),
+  };
+
+  return (
+    <div className="space-y-6 animate-section-in">
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">{getGreeting()}, Ryan</h2>
+          <p className="text-muted-foreground mt-1">
+            {editMode ? 'Drag widgets to rearrange your dashboard' : "Here's your business at a glance"}
+          </p>
+        </div>
+        <div className="text-right hidden sm:block">
+          <p className="text-2xl font-mono font-semibold tracking-tight">{time}</p>
+          <p className="text-sm text-muted-foreground">{date}</p>
+        </div>
+      </div>
+
+      <div ref={containerRef} className={cn("space-y-6", editMode && "pb-8")}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {order.map((widgetId, index) => {
+          const content = widgets[widgetId];
+          if (!content) return null;
+
+          const isDragging = dragging === index;
+          const isOver = overIndex === index && dragging !== null && dragging !== index;
+
+          return (
+            <div
+              key={widgetId}
+              data-reorder-item
+              className={cn(
+                'transition-all duration-200',
+                isDragging && 'opacity-50 scale-[0.98]',
+                isOver && 'ring-2 ring-accent ring-offset-2 ring-offset-background rounded-2xl'
+              )}
+            >
+              <DragHandle index={index} onTouchStart={handleTouchStart} editMode={editMode} />
+              {content}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1506,10 +1663,21 @@ function StocksSection() {
     }
   }, [stocks, timeRange, setStocks]);
 
-  // Load persisted stocks on mount and auto-refresh every 60 seconds
+  // Load persisted stocks on mount (server sync first, then localStorage fallback) and auto-refresh every 60 seconds
   useEffect(() => {
-    const symbols = useDashboardStore.getState().stockSymbols;
-    if (symbols.length > 0) fetchStockData(symbols);
+    (async () => {
+      // Try server sync for stock symbols
+      const remote = await syncFromServer('stock-symbols');
+      if (Array.isArray(remote) && remote.length > 0) {
+        const remoteSymbols = remote as string[];
+        useDashboardStore.setState({ stockSymbols: remoteSymbols });
+        localStorage.setItem('rcc-stock-symbols', JSON.stringify(remoteSymbols));
+        fetchStockData(remoteSymbols);
+      } else {
+        const symbols = useDashboardStore.getState().stockSymbols;
+        if (symbols.length > 0) fetchStockData(symbols);
+      }
+    })();
     const interval = setInterval(() => {
       const currentSymbols = useDashboardStore.getState().stockSymbols;
       if (currentSymbols.length > 0) fetchStockData(currentSymbols);
@@ -1995,12 +2163,14 @@ export default function Dashboard() {
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [sectionKey, setSectionKey] = useState(0);
+  const [editMode, setEditMode] = useState(false);
   const { time: sidebarTime } = useLiveClock();
   const { showBanner, requestPermission, dismissBanner, notificationsEnabled, permission } = useEnquiryNotifications();
 
   const handleNavigate = useCallback((section: string) => {
     setActiveSection(section);
     setSectionKey(k => k + 1);
+    setEditMode(false);
     if (window.innerWidth < 1024) setSidebarOpen(false);
   }, [setActiveSection, setSidebarOpen]);
 
@@ -2085,7 +2255,7 @@ export default function Dashboard() {
 
   const renderSection = () => {
     switch (activeSection) {
-      case 'overview': return <OverviewSection />;
+      case 'overview': return <OverviewSection editMode={editMode} />;
       case 'analytics': return <AnalyticsSection />;
       case 'finances': return <FinancesSection />;
       case 'instagram': return <InstagramSection />;
@@ -2093,7 +2263,7 @@ export default function Dashboard() {
       case 'stocks': return <StocksSection />;
       case 'enquiries': return <EnquiriesSection />;
       case 'clients': return <ClientsSection />;
-      default: return <OverviewSection />;
+      default: return <OverviewSection editMode={editMode} />;
     }
   };
 
@@ -2107,7 +2277,20 @@ export default function Dashboard() {
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <h1 className="font-semibold text-sm">Command Centre</h1>
-        <div className="w-9" />
+        {activeSection === 'overview' ? (
+          <button
+            onClick={() => setEditMode(prev => !prev)}
+            className={cn(
+              'p-2 rounded-xl transition-colors',
+              editMode ? 'bg-accent text-white' : 'hover:bg-muted text-muted-foreground'
+            )}
+            title={editMode ? 'Done editing' : 'Edit layout'}
+          >
+            {editMode ? <Check className="h-5 w-5" /> : <Pencil className="h-5 w-5" />}
+          </button>
+        ) : (
+          <div className="w-9" />
+        )}
       </div>
 
       <div className="flex">

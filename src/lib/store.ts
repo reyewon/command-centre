@@ -20,6 +20,28 @@ function persistSymbols(symbols: string[]) {
   try {
     localStorage.setItem(STOCK_SYMBOLS_KEY, JSON.stringify(symbols));
   } catch {}
+  // Fire-and-forget server sync
+  syncToServer('stock-symbols', symbols);
+}
+
+// Server sync helpers (fire-and-forget)
+export function syncToServer(key: string, value: unknown) {
+  fetch('/api/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, value }),
+  }).catch(() => {});
+}
+
+export async function syncFromServer(key: string): Promise<unknown | null> {
+  try {
+    const res = await fetch(`/api/sync?key=${key}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.value;
+  } catch {
+    return null;
+  }
 }
 
 export interface Invoice {
