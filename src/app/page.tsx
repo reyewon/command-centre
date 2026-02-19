@@ -13,7 +13,7 @@ import {
   Instagram, Globe, Receipt, Clock, MapPin, ArrowUpRight, ArrowDownRight,
   Menu, X, Home, PieChart, Wallet, CalendarDays, Store, Settings,
   Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2,
-  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical
+  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical, Mail
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { id: 'instagram', label: 'Instagram', icon: Instagram },
   { id: 'bookings', label: 'Calendar', icon: CalendarDays },
   { id: 'stocks', label: 'Stocks', icon: TrendingUp },
+  { id: 'enquiries', label: 'Enquiries', icon: Mail },
   { id: 'clients', label: 'Clients', icon: Store },
 ];
 
@@ -129,7 +130,8 @@ function CommandPalette({ open, onClose, onNavigate }: {
     { id: 'instagram', label: 'Go to Instagram', shortcut: '4', icon: Instagram, section: 'instagram' },
     { id: 'bookings', label: 'Go to Calendar', shortcut: '5', icon: CalendarDays, section: 'bookings' },
     { id: 'stocks', label: 'Go to Stocks', shortcut: '6', icon: TrendingUp, section: 'stocks' },
-    { id: 'clients', label: 'Go to Clients', shortcut: '7', icon: Store, section: 'clients' },
+    { id: 'enquiries', label: 'Go to Enquiries', shortcut: '7', icon: Mail, section: 'enquiries' },
+    { id: 'clients', label: 'Go to Clients', shortcut: '8', icon: Store, section: 'clients' },
     { id: 'pixieset', label: 'Open Pixieset', shortcut: '', icon: ExternalLink, action: () => window.open('https://studio.pixieset.com/invoices', '_blank') },
     { id: 'ga', label: 'Open Google Analytics', shortcut: '', icon: ExternalLink, action: () => window.open('https://analytics.google.com', '_blank') },
     { id: 'gbp', label: 'Open Google Business', shortcut: '', icon: ExternalLink, action: () => window.open('https://business.google.com', '_blank') },
@@ -1475,6 +1477,199 @@ function ClientsSection() {
   );
 }
 
+// ==================== ENQUIRIES ====================
+
+function EnquiriesSection() {
+  const [emails, setEmails] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [accounts, setAccounts] = useState<{ personal: boolean; professional: boolean }>({ personal: false, professional: false });
+
+  const fetchEnquiries = useCallback(async () => {
+    try {
+      const res = await fetch('/api/enquiries');
+      if (res.ok) {
+        const data = await res.json();
+        setEmails(data.emails || []);
+        if (data.accounts) setAccounts(data.accounts);
+        setLastRefresh(new Date());
+      }
+    } catch (e) {
+      console.error('Failed to fetch enquiries:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEnquiries();
+    const interval = setInterval(fetchEnquiries, 60000);
+    return () => clearInterval(interval);
+  }, [fetchEnquiries]);
+
+  const unreadCount = emails.filter(e => e.isUnread).length;
+
+  const formatTimeAgo = (dateStr: string) => {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  };
+
+  return (
+    <div className="space-y-6 animate-section-in">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Enquiries</h2>
+          <p className="text-muted-foreground mt-1">Photography booking enquiries from Gmail</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {lastRefresh && (
+            <span className="text-xs text-muted-foreground">
+              Updated {formatTimeAgo(lastRefresh.toISOString())}
+            </span>
+          )}
+          <button
+            onClick={() => { setLoading(true); fetchEnquiries(); }}
+            className="p-2 rounded-xl hover:bg-muted transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className={cn("h-4 w-4 text-muted-foreground", loading && "animate-spin")} />
+          </button>
+        </div>
+      </div>
+
+      {/* Account status */}
+      <div className="flex items-center gap-3">
+        <div className={cn("flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full", accounts.personal ? "bg-success-tint text-success" : "bg-muted text-muted-foreground")}>
+          <span className={cn("w-1.5 h-1.5 rounded-full", accounts.personal ? "bg-success" : "bg-muted-foreground")} />
+          rstanikk@gmail.com
+        </div>
+        <div className={cn("flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full", accounts.professional ? "bg-success-tint text-success" : "bg-muted text-muted-foreground")}>
+          <span className={cn("w-1.5 h-1.5 rounded-full", accounts.professional ? "bg-success" : "bg-muted-foreground")} />
+          photography@ryanstanikk.co.uk
+        </div>
+      </div>
+
+      {/* Summary */}
+      {!loading && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <Card>
+            <p className="text-sm text-muted-foreground">Total enquiries</p>
+            <p className="text-2xl font-bold mt-1">{emails.length}</p>
+            <p className="text-xs text-muted-foreground">Last 3 months</p>
+          </Card>
+          <Card>
+            <p className="text-sm text-muted-foreground">Unread</p>
+            <p className="text-2xl font-bold mt-1" style={{ color: unreadCount > 0 ? 'var(--accent)' : undefined }}>{unreadCount}</p>
+            <p className="text-xs text-muted-foreground">Needs attention</p>
+          </Card>
+          <Card className="hidden sm:block">
+            <p className="text-sm text-muted-foreground">Accounts</p>
+            <p className="text-2xl font-bold mt-1">{(accounts.personal ? 1 : 0) + (accounts.professional ? 1 : 0)}</p>
+            <p className="text-xs text-muted-foreground">Connected</p>
+          </Card>
+        </div>
+      )}
+
+      {/* Email list */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-lg">Recent Enquiries</h3>
+          {unreadCount > 0 && (
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-tint text-accent">
+              {unreadCount} unread
+            </span>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="animate-pulse flex gap-3 py-3 border-b border-border last:border-0">
+                <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-1/3" />
+                  <div className="h-3 bg-muted rounded w-2/3" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : emails.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Mail className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">No enquiries found</p>
+            <p className="text-sm mt-1">Photography enquiries from the last 3 months will appear here</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {emails.map((email) => (
+              <a
+                key={email.id}
+                href={email.gmailUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "flex gap-3 py-3 px-1 -mx-1 rounded-lg transition-colors hover:bg-muted group",
+                  email.isUnread && "bg-accent-tint/30"
+                )}
+              >
+                <div className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold mt-0.5",
+                  email.isUnread
+                    ? "bg-accent text-white"
+                    : "bg-muted text-muted-foreground"
+                )}>
+                  {email.from.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-sm truncate", email.isUnread ? "font-semibold" : "font-medium")}>
+                      {email.from}
+                    </span>
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0",
+                      email.account === 'professional'
+                        ? "bg-accent-tint text-accent"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {email.account === 'professional' ? 'PRO' : 'PERSONAL'}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
+                      {formatTimeAgo(email.date)}
+                    </span>
+                  </div>
+                  <p className={cn("text-sm truncate mt-0.5", email.isUnread ? "text-foreground" : "text-muted-foreground")}>
+                    {email.subject}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {email.snippet}
+                  </p>
+                </div>
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex-shrink-0" />
+              </a>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <InsightBox emoji="📧" text={
+        emails.length > 0
+          ? `${emails.length} photography enquir${emails.length === 1 ? 'y' : 'ies'} in the last 3 months.${unreadCount > 0 ? ` ${unreadCount} still unread — might be worth checking those.` : ' All caught up!'}`
+          : 'No photography enquiries detected recently. Make sure your email accounts are connected above.'
+      } />
+    </div>
+  );
+}
+
 // ==================== MAIN DASHBOARD ====================
 
 export default function Dashboard() {
@@ -1555,10 +1750,10 @@ export default function Dashboard() {
         return;
       }
 
-      // Number keys 1-7: quick navigation
-      const sections = ['overview', 'analytics', 'finances', 'instagram', 'bookings', 'stocks', 'clients'];
+      // Number keys 1-8: quick navigation
+      const sections = ['overview', 'analytics', 'finances', 'instagram', 'bookings', 'stocks', 'enquiries', 'clients'];
       const num = parseInt(e.key);
-      if (num >= 1 && num <= 7 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if (num >= 1 && num <= 8 && !e.metaKey && !e.ctrlKey && !e.altKey) {
         handleNavigate(sections[num - 1]);
         return;
       }
@@ -1581,6 +1776,7 @@ export default function Dashboard() {
       case 'instagram': return <InstagramSection />;
       case 'bookings': return <BookingsSection />;
       case 'stocks': return <StocksSection />;
+      case 'enquiries': return <EnquiriesSection />;
       case 'clients': return <ClientsSection />;
       default: return <OverviewSection />;
     }
