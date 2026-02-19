@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useDashboardStore } from '@/lib/store';
+import { useDashboardStore, IncomeEntry } from '@/lib/store';
 import {
   demoInvoices, demoIncomeEntries, demoAnalytics,
   demoInstagramAccounts, demoStocks, demoBookings
@@ -13,7 +13,7 @@ import {
   Instagram, Globe, Receipt, Clock, MapPin, ArrowUpRight, ArrowDownRight,
   Menu, X, Home, PieChart, Wallet, CalendarDays, Store, Settings,
   Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2,
-  Search, Command, Target, Zap, Keyboard
+  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -250,6 +250,18 @@ function CustomTooltip({ active, payload, label, formatter }: any) {
           {entry.name}: {formatter ? formatter(entry.value) : entry.value}
         </p>
       ))}
+    </div>
+  );
+}
+
+function InsightBox({ icon: Icon, text, emoji }: { icon?: React.ElementType; text: string; emoji?: string }) {
+  return (
+    <div className="rounded-xl p-4 bg-accent-tint border border-border">
+      <div className="flex items-start gap-3">
+        {emoji && <span className="text-lg">{emoji}</span>}
+        {Icon && <Icon className="h-4 w-4 text-accent shrink-0 mt-0.5" />}
+        <p className="text-sm text-foreground">{text}</p>
+      </div>
     </div>
   );
 }
@@ -496,13 +508,47 @@ function OverviewSection() {
 
 function AnalyticsSection() {
   const { analytics } = useDashboardStore();
+  const [analyticsRange, setAnalyticsRange] = useState<'7d' | '30d' | '90d'>('30d');
+
   if (!analytics) return <p className="text-muted-foreground">Loading analytics...</p>;
+
+  const filterAnalyticsData = (data: any[]) => {
+    const days = analyticsRange === '7d' ? 7 : analyticsRange === '30d' ? 30 : 90;
+    return data.slice(-days);
+  };
+
+  const getPreviousPeriodData = () => {
+    const days = analyticsRange === '7d' ? 7 : analyticsRange === '30d' ? 30 : 90;
+    const allData = analytics.dailyTraffic;
+    const startIdx = Math.max(0, allData.length - (days * 2));
+    const endIdx = allData.length - days;
+    return allData.slice(startIdx, endIdx);
+  };
+
+  const currentData = filterAnalyticsData(analytics.dailyTraffic);
+  const previousData = getPreviousPeriodData();
+  const currentUsers = currentData.reduce((sum: number, d: any) => sum + d.users, 0);
+  const previousUsers = previousData.reduce((sum: number, d: any) => sum + d.users, 0);
+  const usersChange = previousUsers > 0 ? ((currentUsers - previousUsers) / previousUsers) * 100 : 0;
+
+  // Merge current and previous period data for overlay chart
+  const mergedChartData = currentData.map((d: any, i: number) => ({
+    ...d,
+    prevUsers: previousData[i]?.users ?? null,
+    prevSessions: previousData[i]?.sessions ?? null,
+  }));
+
+  const topPage = analytics.topPages[0];
+  const directTraffic = analytics.trafficSources.find(s => s.source === 'Direct');
+  const directPercent = directTraffic ? ((directTraffic.sessions / analytics.sessions) * 100).toFixed(1) : '0';
+
+  const insightText = `Users up ${usersChange.toFixed(1)}% vs last period. Direct traffic dominates at ${directPercent}%. ${topPage?.page} remains your top page.`;
 
   return (
     <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Website Analytics</h2>
-        <p className="text-muted-foreground mt-1">ryanstanikk.co.uk (last 30 days)</p>
+        <p className="text-muted-foreground mt-1">ryanstanikk.co.uk</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -513,10 +559,20 @@ function AnalyticsSection() {
       </div>
 
       <Card>
-        <h3 className="font-semibold text-lg mb-4">Daily Traffic</h3>
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="font-semibold text-lg">Daily Traffic</h3>
+          <div className="flex gap-2">
+            {(['7d', '30d', '90d'] as const).map(range => (
+              <button key={range} onClick={() => setAnalyticsRange(range)}
+                className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors',
+                  analyticsRange === range ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                )}>{range}</button>
+            ))}
+          </div>
+        </div>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={analytics.dailyTraffic}>
+            <AreaChart data={mergedChartData}>
               <defs>
                 <linearGradient id="dailyGradient1" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
@@ -533,6 +589,7 @@ function AnalyticsSection() {
               <Tooltip content={<CustomTooltip />} />
               <Area type="monotone" dataKey="users" name="Users" stroke="var(--accent)" fill="url(#dailyGradient1)" strokeWidth={2} />
               <Area type="monotone" dataKey="sessions" name="Sessions" stroke="var(--accent-warm)" fill="url(#dailyGradient2)" strokeWidth={1.5} />
+              <Line type="monotone" dataKey="prevUsers" name="Prev. Users" stroke="var(--accent)" strokeWidth={1.5} strokeDasharray="5 5" strokeOpacity={0.35} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -580,6 +637,8 @@ function AnalyticsSection() {
           </div>
         </Card>
       </div>
+
+      <InsightBox emoji="💡" text={insightText} />
     </div>
   );
 }
@@ -588,6 +647,7 @@ function AnalyticsSection() {
 
 function FinancesSection() {
   const { invoices, incomeEntries, taxPercentage } = useDashboardStore();
+  const [financesRange, setFinancesRange] = useState<'3M' | '6M' | 'All'>('6M');
 
   const paidInvoices = invoices.filter(i => i.status === 'paid');
   const totalPaid = paidInvoices.reduce((sum, i) => sum + i.amount, 0);
@@ -595,9 +655,30 @@ function FinancesSection() {
   const paidThisYear = paidInvoices.filter(i => i.createdDate.startsWith('2026')).reduce((sum, i) => sum + i.amount, 0);
   const taxSetAside = paidThisYear * (taxPercentage / 100);
 
+  const filterIncomeData = (data: IncomeEntry[]) => {
+    if (financesRange === '3M') return data.slice(-3);
+    if (financesRange === '6M') return data.slice(-6);
+    return data;
+  };
+
+  const filteredIncomeEntries = filterIncomeData(incomeEntries);
+  const currentPeriodIncome = filteredIncomeEntries.reduce((sum, e) => sum + (e.photography + e.retainer + e.other), 0);
+  const previousPeriodMonths = financesRange === '3M' ? 3 : financesRange === '6M' ? 6 : 3;
+  const allDataSize = incomeEntries.length;
+  const previousPeriodStart = Math.max(0, allDataSize - (previousPeriodMonths * 2));
+  const previousPeriodEnd = Math.max(0, allDataSize - previousPeriodMonths);
+  const previousPeriodIncome = incomeEntries.slice(previousPeriodStart, previousPeriodEnd).reduce((sum, e) => sum + (e.photography + e.retainer + e.other), 0);
+  const incomeChange = previousPeriodIncome > 0 ? ((currentPeriodIncome - previousPeriodIncome) / previousPeriodIncome) * 100 : 0;
+
+  const currentMonthData = incomeEntries[incomeEntries.length - 1];
+  const previousMonthData = incomeEntries.length > 1 ? incomeEntries[incomeEntries.length - 2] : null;
+  const photographyRecovered = previousMonthData && previousMonthData.photography < currentMonthData.photography;
+
   const clientTotals: Record<string, number> = {};
   paidInvoices.forEach(inv => { const k = inv.project || inv.client; clientTotals[k] = (clientTotals[k] || 0) + inv.amount; });
   const pieData = Object.entries(clientTotals).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }));
+
+  const insightText = `${getMonthName(currentMonthData.month)} is tracking as a strong month. Photography income has ${photographyRecovered ? 'recovered from' : 'dipped from'} ${previousMonthData ? getMonthName(previousMonthData.month) : 'the previous month'}'s level.`;
 
   return (
     <div className="space-y-6 animate-section-in">
@@ -621,10 +702,26 @@ function FinancesSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <h3 className="font-semibold text-lg mb-4">Monthly Income Breakdown</h3>
+          <div className="flex items-start justify-between mb-4">
+            <h3 className="font-semibold text-lg">Monthly Income Breakdown</h3>
+            <div className="flex gap-2">
+              {(['3M', '6M', 'All'] as const).map(range => (
+                <button key={range} onClick={() => setFinancesRange(range)}
+                  className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors',
+                    financesRange === range ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                  )}>{range}</button>
+              ))}
+            </div>
+          </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={incomeEntries.map(e => ({ month: getMonthName(e.month), Photography: e.photography, Retainer: e.retainer }))}>
+              <BarChart data={filteredIncomeEntries.map(e => ({ month: getMonthName(e.month), Photography: e.photography, Retainer: e.retainer }))}>
+                <defs>
+                  <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} />
                 <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickFormatter={(v) => `£${v}`} />
@@ -701,6 +798,8 @@ function FinancesSection() {
           </table>
         </div>
       </Card>
+
+      <InsightBox emoji="📊" text={insightText} />
     </div>
   );
 }
@@ -717,62 +816,76 @@ function InstagramSection() {
         <p className="text-muted-foreground mt-1">Performance across your accounts</p>
       </div>
 
-      {instagramAccounts.map(account => (
-        <div key={account.account} className="space-y-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Instagram className="h-5 w-5" />
-            {account.displayName}
-          </h3>
+      {instagramAccounts.map(account => {
+        const reachChange = account.reachChange;
+        const engagementTrend = reachChange > 100 ? 'spiking' : reachChange > 0 ? 'growing' : 'declining';
+        const postFrequencyAdvice = reachChange > 500 ? 'Consider posting more frequently to capitalise.' : 'Keep posting consistently.';
+        const insightText = account.account === 'padharo'
+          ? `Padharo's reach is up ${reachChange.toFixed(1)}% — a major spike. ${postFrequencyAdvice}`
+          : `${account.displayName} is ${engagementTrend} with reach up ${reachChange.toFixed(1)}%. Engagement at ${account.engagement}%.`;
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <StatCard title="Followers" value={account.followers > 0 ? formatNumber(account.followers) : `+${account.followersChange} new`} change={account.followers > 0 ? (account.followersChange / account.followers) * 100 : undefined} icon={Users} />
-            <StatCard title="Engagement" value={`${account.engagement}%`} change={account.engagementChange} icon={TrendingUp} />
-            <StatCard title="Impressions" value={formatNumber(account.impressions)} change={account.impressionsChange} icon={Eye} />
-            <StatCard title="Reach" value={formatNumber(account.reach)} change={account.reachChange} icon={Globe} />
-          </div>
+        return (
+          <div key={account.account} className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Instagram className="h-5 w-5" />
+              {account.displayName}
+            </h3>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
-              <h4 className="font-semibold text-lg mb-4">Follower Growth</h4>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={account.weeklyFollowers}>
-                    <defs>
-                      <linearGradient id="followerGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickFormatter={formatShortDate} />
-                    <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} domain={['dataMin - 20', 'dataMax + 20']} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line type="monotone" dataKey="count" name="Followers" stroke="var(--accent)" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <StatCard title="Followers" value={account.followers > 0 ? formatNumber(account.followers) : `+${account.followersChange} new`} change={account.followers > 0 ? (account.followersChange / account.followers) * 100 : undefined} icon={Users} />
+              <StatCard title="Engagement" value={`${account.engagement}%`} change={account.engagementChange} icon={TrendingUp} />
+              <StatCard title="Impressions" value={formatNumber(account.impressions)} change={account.impressionsChange} icon={Eye} />
+              <StatCard title="Reach" value={formatNumber(account.reach)} change={account.reachChange} icon={Globe} />
+            </div>
 
-            <Card>
-              <h4 className="font-semibold text-lg mb-4">Top Recent Posts</h4>
-              <div className="space-y-3">
-                {account.topPosts.map((post, i) => (
-                  <div key={i} className="flex items-start justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex-1 mr-4">
-                      <p className="text-sm line-clamp-2">{post.caption}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{formatDate(post.date)}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card>
+                <h4 className="font-semibold text-lg mb-4">Follower Growth</h4>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={account.weeklyFollowers}>
+                      <defs>
+                        <linearGradient id="followerGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickFormatter={formatShortDate} />
+                      <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} domain={['dataMin - 20', 'dataMax + 20']} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line type="monotone" dataKey="count" name="Followers" stroke="var(--accent)" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+
+              <Card>
+                <h4 className="font-semibold text-lg mb-4">Top Recent Posts</h4>
+                <div className="space-y-3">
+                  {account.topPosts.map((post, i) => (
+                    <div key={i} className="flex items-start justify-between py-2 border-b border-border last:border-0">
+                      <div className="flex-1 mr-4">
+                        <p className="text-sm line-clamp-2">{post.caption}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{formatDate(post.date)}</p>
+                      </div>
+                      <div className="text-right text-sm shrink-0">
+                        <p className="text-danger">♥ {post.likes}</p>
+                        <p className="text-muted-foreground">💬 {post.comments}</p>
+                      </div>
                     </div>
-                    <div className="text-right text-sm shrink-0">
-                      <p className="text-danger">♥ {post.likes}</p>
-                      <p className="text-muted-foreground">💬 {post.comments}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                  ))}
+                  {account.topPosts.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No posts yet</p>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            <InsightBox emoji="✨" text={insightText} />
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -780,12 +893,33 @@ function InstagramSection() {
 // ==================== BOOKINGS ====================
 
 function BookingsSection() {
-  const { bookings } = useDashboardStore();
+  const { bookings, weather } = useDashboardStore();
   const typeColors: Record<string, string> = {
     photography: 'bg-accent-tint text-accent',
     retainer: 'bg-accent-warm-tint text-accent-warm',
     personal: 'bg-muted text-muted-foreground',
   };
+
+  const getWeatherEmoji = (icon: string) => {
+    if (icon === 'clear') return '☀️';
+    if (icon === 'clouds') return '☁️';
+    if (icon === 'rain') return '🌧️';
+    return '⛅';
+  };
+
+  const getMapUrl = (booking: { title: string; location?: string }) => {
+    if (!booking.location || booking.location === 'Hire') return null;
+    // Use business name + location for better search results
+    const query = booking.location.includes(',')
+      ? booking.location  // Already specific (e.g. "Verona, Italy")
+      : `${booking.title} ${booking.location}`;  // e.g. "Above Barbers Southampton"
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  };
+
+  const photographyBookings = bookings.filter(b => b.type === 'photography');
+  const upcomingPhotography = photographyBookings.slice(0, 3);
+  const shootsBooked = photographyBookings.length;
+  const bookingInsight = `You have ${shootsBooked} photography ${shootsBooked === 1 ? 'shoot' : 'shoots'} booked. ${upcomingPhotography.length > 0 ? `Next ${upcomingPhotography.length} ${upcomingPhotography.length === 1 ? 'is' : 'are'} confirmed.` : 'Great to fill your calendar!'}`;
 
   return (
     <div className="space-y-6 animate-section-in">
@@ -805,6 +939,10 @@ function BookingsSection() {
         <div className="space-y-1">
           {bookings.map(booking => {
             const days = daysUntil(booking.date);
+            const mapUrl = getMapUrl(booking);
+            const isSouthampton = booking.location && (booking.location.includes('Southampton') || booking.location === 'Above Barbers');
+            const showWeather = booking.type === 'photography' && isSouthampton && weather;
+
             return (
               <div key={booking.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
                 <div className="w-14 text-center shrink-0">
@@ -817,7 +955,24 @@ function BookingsSection() {
                   <p className="font-medium truncate">{booking.title}</p>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
                     {booking.time && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {booking.time}</span>}
-                    {booking.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {booking.location}</span>}
+                    {booking.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {mapUrl ? (
+                          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                            {booking.location}
+                          </a>
+                        ) : (
+                          booking.location
+                        )}
+                      </span>
+                    )}
+                    {showWeather && (
+                      <span className="flex items-center gap-1">
+                        <span className="text-base">{getWeatherEmoji(weather.icon)}</span>
+                        <span>{weather.temp}°C</span>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="text-right shrink-0">
@@ -831,6 +986,8 @@ function BookingsSection() {
           })}
         </div>
       </Card>
+
+      <InsightBox emoji="📅" text={bookingInsight} />
     </div>
   );
 }
@@ -914,6 +1071,8 @@ function ClientsSection() {
   const padharoInvoices = invoices.filter(i => i.project === 'Padharo');
   const padharoTotal = padharoInvoices.reduce((sum, i) => sum + i.amount, 0);
 
+  const padharoInsight = `Padharo remains a key client with ${padharoTotal > 0 ? formatCurrency(padharoTotal) + ' invoiced' : 'active work'}.${padharoIG && padharoIG.reachChange > 500 ? ` Instagram reach is up massively (${padharoIG.reachChange.toFixed(1)}%). Keep the momentum going!` : padharoIG ? ` Engagement at ${padharoIG.engagement}%.` : ''}`;
+
   return (
     <div className="space-y-6 animate-section-in">
       <div>
@@ -949,10 +1108,11 @@ function ClientsSection() {
             </div>
           )}
         </div>
-        <div className="flex gap-3 text-sm">
+        <div className="flex gap-3 text-sm mb-4">
           <a href="https://studio.pixieset.com/invoices" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-1">Pixieset <ExternalLink className="h-3.5 w-3.5" /></a>
           <a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-1">Google Business <ExternalLink className="h-3.5 w-3.5" /></a>
         </div>
+        <InsightBox emoji="🍜" text={padharoInsight} />
       </Card>
 
       <Card>

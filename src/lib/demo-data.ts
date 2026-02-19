@@ -66,9 +66,9 @@ export const demoAnalytics: AnalyticsData = {
     { source: 'Organic Social', sessions: 4, change: 33.3 },
     { source: 'Referral', sessions: 1, change: -75 },
   ],
-  dailyTraffic: Array.from({ length: 30 }, (_, i) => {
+  dailyTraffic: Array.from({ length: 90 }, (_, i) => {
     const date = new Date(2026, 1, 19);
-    date.setDate(date.getDate() - (29 - i));
+    date.setDate(date.getDate() - (89 - i));
     const dayOfWeek = date.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const baseSessions = isWeekend ? 4 : 7;
