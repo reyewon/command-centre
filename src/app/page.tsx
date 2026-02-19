@@ -13,7 +13,7 @@ import {
   Instagram, Globe, Receipt, Clock, MapPin, ArrowUpRight, ArrowDownRight,
   Menu, X, Home, PieChart, Wallet, CalendarDays, Store, Settings,
   Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2,
-  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical, Mail
+  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical, Mail, Bell, BellRing, Volume2
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -81,6 +81,228 @@ function useLiveClock() {
   }, []);
 
   return { time, date };
+}
+
+// ==================== NOTIFICATION SOUND ====================
+
+function playEnquiryChime() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    // Create a warm, distinctive 3-note ascending chime (C5 - E5 - G5 major triad)
+    const notes = [
+      { freq: 523.25, time: 0, duration: 0.8 },      // C5
+      { freq: 659.25, time: 0.12, duration: 0.7 },    // E5
+      { freq: 783.99, time: 0.24, duration: 0.9 },    // G5
+    ];
+
+    // Subtle reverb via delay
+    const delay = ctx.createDelay();
+    delay.delayTime.value = 0.08;
+    const delayGain = ctx.createGain();
+    delayGain.gain.value = 0.15;
+    delay.connect(delayGain);
+    delayGain.connect(ctx.destination);
+
+    notes.forEach(({ freq, time: t, duration }) => {
+      // Main tone (sine - warm and pure)
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.value = freq;
+
+      // Subtle harmonic layer (triangle - adds warmth)
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'triangle';
+      osc2.frequency.value = freq * 2; // octave above
+
+      // Main gain envelope
+      const gain1 = ctx.createGain();
+      gain1.gain.setValueAtTime(0, now + t);
+      gain1.gain.linearRampToValueAtTime(0.22, now + t + 0.03);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + t + duration);
+
+      // Harmonic gain (quieter)
+      const gain2 = ctx.createGain();
+      gain2.gain.setValueAtTime(0, now + t);
+      gain2.gain.linearRampToValueAtTime(0.06, now + t + 0.03);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + t + duration * 0.7);
+
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      gain1.connect(delay);
+
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+
+      osc1.start(now + t);
+      osc1.stop(now + t + duration);
+      osc2.start(now + t);
+      osc2.stop(now + t + duration * 0.7);
+    });
+
+    // Add a subtle low bell tone for body
+    const bell = ctx.createOscillator();
+    bell.type = 'sine';
+    bell.frequency.value = 261.63; // C4 (octave below)
+    const bellGain = ctx.createGain();
+    bellGain.gain.setValueAtTime(0, now);
+    bellGain.gain.linearRampToValueAtTime(0.08, now + 0.05);
+    bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+    bell.connect(bellGain);
+    bellGain.connect(ctx.destination);
+    bell.start(now);
+    bell.stop(now + 1.2);
+
+    setTimeout(() => ctx.close(), 3000);
+  } catch (e) {
+    // Audio not available, skip silently
+  }
+}
+
+// ==================== ENQUIRY NOTIFICATIONS ====================
+
+function useEnquiryNotifications() {
+  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const initialLoadRef = useRef(true);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    // Load seen IDs from localStorage
+    try {
+      const stored = localStorage.getItem('rcc-seen-enquiry-ids');
+      if (stored) seenIdsRef.current = new Set(JSON.parse(stored));
+      const enabled = localStorage.getItem('rcc-notifications-enabled');
+      if (enabled === 'true') setNotificationsEnabled(true);
+      const wasDismissed = localStorage.getItem('rcc-notification-banner-dismissed');
+      if (wasDismissed === 'true') setDismissed(true);
+    } catch {}
+
+    // Check current permission
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestPermission = useCallback(async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      if (result === 'granted') {
+        setNotificationsEnabled(true);
+        localStorage.setItem('rcc-notifications-enabled', 'true');
+        // Play the chime as a preview
+        playEnquiryChime();
+      }
+    }
+  }, []);
+
+  const dismissBanner = useCallback(() => {
+    setDismissed(true);
+    localStorage.setItem('rcc-notification-banner-dismissed', 'true');
+  }, []);
+
+  const checkForNewEmails = useCallback((emails: any[]) => {
+    if (!notificationsEnabled && permission !== 'granted') return;
+
+    const unreadEmails = emails.filter((e: any) => e.isUnread);
+
+    // On initial load, just mark everything as seen without notifying
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      unreadEmails.forEach((e: any) => seenIdsRef.current.add(e.id));
+      try {
+        localStorage.setItem('rcc-seen-enquiry-ids', JSON.stringify([...seenIdsRef.current]));
+      } catch {}
+      return;
+    }
+
+    const newEmails = unreadEmails.filter((e: any) => !seenIdsRef.current.has(e.id));
+
+    if (newEmails.length > 0) {
+      // Mark as seen
+      newEmails.forEach((e: any) => seenIdsRef.current.add(e.id));
+      try {
+        localStorage.setItem('rcc-seen-enquiry-ids', JSON.stringify([...seenIdsRef.current]));
+      } catch {}
+
+      // Play the chime
+      playEnquiryChime();
+
+      // Show desktop notification for each new email
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        newEmails.forEach((email: any) => {
+          const n = new Notification(`New Enquiry from ${email.from}`, {
+            body: email.subject,
+            icon: '/icon-192.png',
+            tag: `enquiry-${email.id}`,
+            requireInteraction: false,
+          });
+          // Click notification to open Gmail
+          n.onclick = () => {
+            window.open(email.gmailUrl, '_blank');
+            n.close();
+          };
+        });
+      }
+    }
+  }, [notificationsEnabled, permission]);
+
+  // Poll for new enquiries (30s for faster notification)
+  useEffect(() => {
+    if (!notificationsEnabled && permission !== 'granted') return;
+
+    const poll = () => {
+      fetch('/api/enquiries')
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.emails) checkForNewEmails(d.emails); })
+        .catch(() => {});
+    };
+
+    // Initial check
+    poll();
+
+    // Poll every 30 seconds
+    const interval = setInterval(poll, 30000);
+    return () => clearInterval(interval);
+  }, [notificationsEnabled, permission, checkForNewEmails]);
+
+  return {
+    permission,
+    notificationsEnabled,
+    requestPermission,
+    dismissed,
+    dismissBanner,
+    showBanner: !dismissed && permission !== 'granted',
+  };
+}
+
+// ==================== NOTIFICATION BANNER ====================
+
+function NotificationBanner({ onEnable, onDismiss }: { onEnable: () => void; onDismiss: () => void }) {
+  return (
+    <div className="mb-4 glass-card rounded-xl px-4 py-3 flex items-center gap-3 border border-accent/20 bg-accent-tint animate-fade-in">
+      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+        <BellRing className="h-4 w-4 text-accent" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">Enable enquiry notifications?</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Get notified with a chime when new photography enquiries arrive.</p>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button onClick={onEnable}
+          className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium hover:bg-accent-hover transition-colors">
+          Enable
+        </button>
+        <button onClick={onDismiss}
+          className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-medium hover:bg-card-hover transition-colors">
+          Later
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ==================== PROGRESS RING ====================
@@ -1774,6 +1996,7 @@ export default function Dashboard() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [sectionKey, setSectionKey] = useState(0);
   const { time: sidebarTime } = useLiveClock();
+  const { showBanner, requestPermission, dismissBanner, notificationsEnabled, permission } = useEnquiryNotifications();
 
   const handleNavigate = useCallback((section: string) => {
     setActiveSection(section);
@@ -1913,6 +2136,9 @@ export default function Dashboard() {
                 )}>
                 <item.icon className="h-4 w-4" />
                 <span className="flex-1 text-left">{item.label}</span>
+                {item.id === 'enquiries' && notificationsEnabled && (
+                  <Bell className="h-3 w-3 text-accent opacity-60" />
+                )}
                 <kbd className="hidden group-hover:inline text-[10px] font-mono px-1 py-0.5 rounded bg-muted text-muted-foreground">{i + 1}</kbd>
               </button>
             ))}
@@ -1947,8 +2173,13 @@ export default function Dashboard() {
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
         <main className="flex-1 min-h-screen">
-          <div key={sectionKey} className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-            {renderSection()}
+          <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+            {showBanner && (
+              <NotificationBanner onEnable={requestPermission} onDismiss={dismissBanner} />
+            )}
+            <div key={sectionKey}>
+              {renderSection()}
+            </div>
           </div>
         </main>
       </div>
