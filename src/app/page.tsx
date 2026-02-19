@@ -1581,9 +1581,9 @@ export default function Dashboard() {
           'fixed lg:sticky top-0 left-0 z-40 h-screen w-60 bg-sidebar border-r border-sidebar-border transition-transform duration-200 lg:translate-x-0 overflow-y-auto flex flex-col',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}>
-          <div className="p-5 pt-5">
-            <div className="flex justify-center mb-3">
-              <img src="/funk.png" alt="Ryan Stanikk" className="w-16 h-16 rounded-2xl object-cover object-top" style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)' }} />
+          <div className="p-5 pt-4">
+            <div className="hidden lg:flex justify-center mb-2">
+              <img src="/funk.png" alt="Ryan Stanikk" className="w-28 h-auto object-contain drop-shadow-lg" />
             </div>
             <div className="flex items-center justify-between">
               <h1 className="text-base font-bold tracking-tight">Command Centre</h1>
