@@ -30,7 +30,7 @@ const NAV_ITEMS = [
   { id: 'clients', label: 'Clients', icon: Store },
 ];
 
-const PIE_COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#f59e0b', '#10b981', '#6b7280'];
+const PIE_COLORS = ['#d97757', '#c15f3c', '#e5956e', '#c9923e', '#5a9a6e', '#8a857a'];
 
 // ==================== ANIMATED NUMBER ====================
 
@@ -195,7 +195,7 @@ function Card({ children, className, onClick }: { children: React.ReactNode; cla
     <div
       onClick={onClick}
       className={cn(
-        'glass-card rounded-xl p-5 sm:p-6',
+        'glass-card rounded-2xl p-5 sm:p-6',
         onClick && 'cursor-pointer hover:shadow-md transition-shadow',
         className
       )}
@@ -219,7 +219,7 @@ function StatCard({ title, value, change, icon: Icon, prefix, suffix }: {
             {prefix}{typeof value === 'number' ? formatNumber(value) : value}{suffix}
           </p>
         </div>
-        <div className="rounded-lg p-2.5" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }}>
+        <div className="rounded-xl p-2.5" style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)' }}>
           <Icon className="h-5 w-5 text-accent" />
         </div>
       </div>
@@ -243,7 +243,7 @@ function StatCard({ title, value, change, icon: Icon, prefix, suffix }: {
 function CustomTooltip({ active, payload, label, formatter }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="glass-card rounded-lg border border-border px-3 py-2 shadow-lg">
+    <div className="glass-card rounded-xl border border-border px-3 py-2 shadow-lg">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} className="text-sm font-medium" style={{ color: entry.color }}>
@@ -302,7 +302,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg hover:bg-sidebar-hover transition-colors text-sidebar-foreground"
+      className="p-2 rounded-xl hover:bg-sidebar-hover transition-colors text-sidebar-foreground"
       title={`Current: ${theme}`}
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -632,7 +632,7 @@ function AnalyticsSection() {
           <div className="flex gap-2">
             {(['7d', '30d', '90d'] as const).map(range => (
               <button key={range} onClick={() => setAnalyticsRange(range)}
-                className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors',
+                className={cn('px-3 py-1.5 text-sm rounded-xl transition-colors',
                   analyticsRange === range ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
                 )}>{range}</button>
             ))}
@@ -775,7 +775,7 @@ function FinancesSection() {
             <div className="flex gap-2">
               {(['3M', '6M', 'All'] as const).map(range => (
                 <button key={range} onClick={() => setFinancesRange(range)}
-                  className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors',
+                  className={cn('px-3 py-1.5 text-sm rounded-xl transition-colors',
                     financesRange === range ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
                   )}>{range}</button>
               ))}
@@ -1074,7 +1074,7 @@ function BookingsSection() {
           <div className="flex gap-2">
             {(['all', 'photography', 'travel', 'meeting'] as const).map(filter => (
               <button key={filter} onClick={() => setBookingsFilter(filter)}
-                className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors capitalize',
+                className={cn('px-3 py-1.5 text-sm rounded-xl transition-colors capitalize',
                   bookingsFilter === filter ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
                 )}>{filter}</button>
             ))}
@@ -1246,11 +1246,11 @@ function StocksSection() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => fetchStockData()} disabled={isRefreshing}
-            className="p-2 rounded-lg bg-muted hover:bg-card-hover transition-colors disabled:opacity-50" title="Refresh">
+            className="p-2 rounded-xl bg-muted hover:bg-card-hover transition-colors disabled:opacity-50" title="Refresh">
             <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
           </button>
           <button onClick={() => setAddingStock(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition-opacity">
             <Plus className="h-4 w-4" /> Add stock
           </button>
         </div>
@@ -1264,16 +1264,16 @@ function StocksSection() {
               value={newSymbol}
               onChange={e => setNewSymbol(e.target.value.toUpperCase())}
               placeholder="Enter ticker symbol (e.g. AAPL, TSLA)"
-              className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent"
+              className="flex-1 bg-muted rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent"
               onKeyDown={e => { if (e.key === 'Enter') handleAddStock(); if (e.key === 'Escape') setAddingStock(false); }}
               autoFocus
             />
             <button onClick={handleAddStock} disabled={loadingSymbol || !newSymbol.trim()}
-              className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium disabled:opacity-50">
+              className="px-4 py-2 rounded-xl bg-accent text-accent-foreground text-sm font-medium disabled:opacity-50">
               {loadingSymbol ? 'Loading...' : 'Add'}
             </button>
             <button onClick={() => { setAddingStock(false); setNewSymbol(''); }}
-              className="p-2 rounded-lg hover:bg-muted transition-colors">
+              className="p-2 rounded-xl hover:bg-muted transition-colors">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -1334,7 +1334,7 @@ function StocksSection() {
             <div className="flex gap-2 mb-4">
               {(['1D', '1W', '1M', '3M'] as const).map(range => (
                 <button key={range} onClick={() => setTimeRange(range)}
-                  className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors',
+                  className={cn('px-3 py-1.5 text-sm rounded-xl transition-colors',
                     timeRange === range ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
                   )}>{range}</button>
               ))}
@@ -1389,7 +1389,7 @@ function ClientsSection() {
 
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--accent-warm) 12%, transparent)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--accent-warm) 12%, transparent)' }}>
             <ChefHat className="h-5 w-5 text-accent-warm" />
           </div>
           <div>
@@ -1398,17 +1398,17 @@ function ClientsSection() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <div className="rounded-lg bg-muted p-3">
+          <div className="rounded-xl bg-muted p-3">
             <p className="text-sm text-muted-foreground">Monthly retainer</p>
             <p className="text-lg font-semibold">{formatCurrency(1000)}</p>
             <p className="text-xs text-muted-foreground">(Jan-Mar rate)</p>
           </div>
-          <div className="rounded-lg bg-muted p-3">
+          <div className="rounded-xl bg-muted p-3">
             <p className="text-sm text-muted-foreground">Total invoiced</p>
             <p className="text-lg font-semibold">{formatCurrency(padharoTotal)}</p>
           </div>
           {padharoIG && (
-            <div className="rounded-lg bg-muted p-3">
+            <div className="rounded-xl bg-muted p-3">
               <p className="text-sm text-muted-foreground">IG followers</p>
               <p className="text-lg font-semibold">{formatNumber(padharoIG.followers)}</p>
               <p className="text-xs text-success">+{padharoIG.followersChange} this month</p>
@@ -1424,7 +1424,7 @@ function ClientsSection() {
 
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-success-tint flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-success-tint flex items-center justify-center">
             <Store className="h-5 w-5 text-success" />
           </div>
           <div>
@@ -1544,7 +1544,7 @@ export default function Dashboard() {
 
       {/* Mobile header */}
       <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card sticky top-0 z-50">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-muted">
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-xl hover:bg-muted">
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <h1 className="font-semibold text-sm">Command Centre</h1>
@@ -1569,7 +1569,7 @@ export default function Dashboard() {
               <button key={item.id}
                 onClick={() => handleNavigate(item.id)}
                 className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors group',
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors group',
                   activeSection === item.id ? 'bg-accent-tint text-accent' : 'text-muted-foreground hover:text-foreground hover:bg-sidebar-hover'
                 )}>
                 <item.icon className="h-4 w-4" />
@@ -1582,7 +1582,7 @@ export default function Dashboard() {
           {/* Command palette trigger */}
           <div className="px-3 mb-2">
             <button onClick={() => setCommandPaletteOpen(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-hover transition-colors border border-border">
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-hover transition-colors border border-border">
               <Search className="h-3.5 w-3.5" />
               <span className="flex-1 text-left text-xs">Search...</span>
               <kbd className="text-[10px] font-mono px-1 py-0.5 rounded bg-muted">⌘K</kbd>

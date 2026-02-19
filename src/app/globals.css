@@ -1,64 +1,64 @@
 @import "tailwindcss";
 
-/* Light theme (default) */
+/* Light theme (default) - Claude-inspired warm palette */
 :root {
-  --background: #f8f9fc;
-  --foreground: #1a1a2e;
+  --background: #faf9f5;
+  --foreground: #1a1816;
   --card: #ffffff;
-  --card-foreground: #1a1a2e;
-  --card-hover: #f1f3f9;
-  --muted: #eef0f6;
-  --muted-foreground: #6b7194;
-  --border: #e2e5ef;
-  --accent: #6366f1;
-  --accent-light: #818cf8;
+  --card-foreground: #1a1816;
+  --card-hover: #f5f3ee;
+  --muted: #f0ede6;
+  --muted-foreground: #8a857a;
+  --border: #e8e5dc;
+  --accent: #d97757;
+  --accent-light: #e5956e;
   --accent-foreground: #ffffff;
-  --accent-warm: #f59e0b;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --accent-warm: #c15f3c;
+  --success: #5a9a6e;
+  --warning: #c9923e;
+  --danger: #c75450;
   --sidebar: #ffffff;
-  --sidebar-foreground: #1a1a2e;
-  --sidebar-border: #e2e5ef;
-  --sidebar-hover: #f1f3f9;
-  --glow: rgba(99, 102, 241, 0.08);
-  --chart-1: #6366f1;
-  --chart-2: #8b5cf6;
-  --chart-3: #a78bfa;
-  --chart-4: #c4b5fd;
-  --chart-gradient-start: rgba(99, 102, 241, 0.2);
-  --chart-gradient-end: rgba(99, 102, 241, 0);
-  --radius: 0.75rem;
+  --sidebar-foreground: #1a1816;
+  --sidebar-border: #e8e5dc;
+  --sidebar-hover: #f5f3ee;
+  --glow: rgba(217, 119, 87, 0.06);
+  --chart-1: #d97757;
+  --chart-2: #c15f3c;
+  --chart-3: #e5956e;
+  --chart-4: #f0b89e;
+  --chart-gradient-start: rgba(217, 119, 87, 0.2);
+  --chart-gradient-end: rgba(217, 119, 87, 0);
+  --radius: 1rem;
 }
 
-/* Dark theme */
+/* Dark theme - warm dark inspired by Claude */
 [data-theme="dark"] {
-  --background: #0a0a12;
-  --foreground: #e4e4ef;
-  --card: #13131f;
-  --card-foreground: #e4e4ef;
-  --card-hover: #1a1a2e;
-  --muted: #1a1a2e;
-  --muted-foreground: #7a7a9e;
-  --border: #1f1f35;
-  --accent: #818cf8;
-  --accent-light: #a5b4fc;
-  --accent-foreground: #0a0a12;
-  --accent-warm: #fbbf24;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --sidebar: #0e0e18;
-  --sidebar-foreground: #e4e4ef;
-  --sidebar-border: #1a1a2e;
-  --sidebar-hover: #1a1a2e;
-  --glow: rgba(129, 140, 248, 0.06);
-  --chart-1: #818cf8;
-  --chart-2: #a78bfa;
-  --chart-3: #c4b5fd;
-  --chart-4: #ddd6fe;
-  --chart-gradient-start: rgba(129, 140, 248, 0.25);
-  --chart-gradient-end: rgba(129, 140, 248, 0);
+  --background: #1a1816;
+  --foreground: #e8e4dc;
+  --card: #242220;
+  --card-foreground: #e8e4dc;
+  --card-hover: #2e2b28;
+  --muted: #2e2b28;
+  --muted-foreground: #9a9590;
+  --border: #383430;
+  --accent: #e5956e;
+  --accent-light: #f0b89e;
+  --accent-foreground: #1a1816;
+  --accent-warm: #d97757;
+  --success: #7ab88a;
+  --warning: #dba854;
+  --danger: #e07070;
+  --sidebar: #1f1d1b;
+  --sidebar-foreground: #e8e4dc;
+  --sidebar-border: #383430;
+  --sidebar-hover: #2e2b28;
+  --glow: rgba(229, 149, 110, 0.05);
+  --chart-1: #e5956e;
+  --chart-2: #d97757;
+  --chart-3: #f0b89e;
+  --chart-4: #c15f3c;
+  --chart-gradient-start: rgba(229, 149, 110, 0.25);
+  --chart-gradient-end: rgba(229, 149, 110, 0);
 }
 
 @theme inline {
@@ -82,14 +82,16 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-hover: var(--sidebar-hover);
   --color-glow: var(--glow);
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -123,14 +125,14 @@ body {
   outline: none !important;
 }
 
-/* Glass card effect */
+/* Glass card effect - softer, warmer */
 .glass-card {
   background: var(--card);
   border: 1px solid var(--border);
-  box-shadow: 0 0 0 1px var(--glow), 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 [data-theme="dark"] .glass-card {
-  box-shadow: 0 0 0 1px var(--glow), 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 /* Glow accent */
@@ -145,22 +147,22 @@ body {
 
 /* Tinted backgrounds for badges/tags */
 .bg-accent-tint {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .bg-success-tint {
-  background: color-mix(in srgb, var(--success) 12%, transparent);
+  background: color-mix(in srgb, var(--success) 10%, transparent);
 }
 .bg-warning-tint {
-  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
 }
 .bg-danger-tint {
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 .bg-accent-warm-tint {
-  background: color-mix(in srgb, var(--accent-warm) 12%, transparent);
+  background: color-mix(in srgb, var(--accent-warm) 10%, transparent);
 }
 .bg-muted-tint {
-  background: color-mix(in srgb, var(--muted-foreground) 8%, transparent);
+  background: color-mix(in srgb, var(--muted-foreground) 6%, transparent);
 }
 
 /* Section transition animation */
