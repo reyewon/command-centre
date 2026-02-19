@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'finances', label: 'Finances', icon: Wallet },
   { id: 'instagram', label: 'Instagram', icon: Instagram },
-  { id: 'bookings', label: 'Bookings', icon: CalendarDays },
+  { id: 'bookings', label: 'Calendar', icon: CalendarDays },
   { id: 'stocks', label: 'Stocks', icon: TrendingUp },
   { id: 'clients', label: 'Clients', icon: Store },
 ];
@@ -127,7 +127,7 @@ function CommandPalette({ open, onClose, onNavigate }: {
     { id: 'analytics', label: 'Go to Analytics', shortcut: '2', icon: BarChart3, section: 'analytics' },
     { id: 'finances', label: 'Go to Finances', shortcut: '3', icon: Wallet, section: 'finances' },
     { id: 'instagram', label: 'Go to Instagram', shortcut: '4', icon: Instagram, section: 'instagram' },
-    { id: 'bookings', label: 'Go to Bookings', shortcut: '5', icon: CalendarDays, section: 'bookings' },
+    { id: 'bookings', label: 'Go to Calendar', shortcut: '5', icon: CalendarDays, section: 'bookings' },
     { id: 'stocks', label: 'Go to Stocks', shortcut: '6', icon: TrendingUp, section: 'stocks' },
     { id: 'clients', label: 'Go to Clients', shortcut: '7', icon: Store, section: 'clients' },
     { id: 'pixieset', label: 'Open Pixieset', shortcut: '', icon: ExternalLink, action: () => window.open('https://studio.pixieset.com/invoices', '_blank') },
@@ -427,7 +427,7 @@ function OverviewSection() {
 
           {nextBooking && (
             <Card>
-              <p className="text-sm text-muted-foreground">Next booking</p>
+              <p className="text-sm text-muted-foreground">Next up</p>
               <p className="font-semibold mt-1">{nextBooking.title}</p>
               <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
@@ -1058,8 +1058,8 @@ function BookingsSection() {
   return (
     <div className="space-y-6 animate-section-in">
       <div>
-        <h2 className="text-3xl font-bold">Bookings</h2>
-        <p className="text-muted-foreground mt-1">Upcoming shoots, travel, and meetings</p>
+        <h2 className="text-3xl font-bold">Calendar</h2>
+        <p className="text-muted-foreground mt-1">Upcoming shoots, travel, meetings, and events</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -1144,7 +1144,7 @@ function BookingsSection() {
             );
           })}
           {filteredBookings.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6">No {bookingsFilter} bookings</p>
+            <p className="text-sm text-muted-foreground text-center py-6">No {bookingsFilter} events</p>
           )}
         </div>
       </Card>
