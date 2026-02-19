@@ -1088,70 +1088,216 @@ function BookingsSection() {
 // ==================== STOCKS ====================
 
 function StocksSection() {
-  const { stocks } = useDashboardStore();
-  const [timeRange, setTimeRange] = useState<'1W' | '1M' | '3M'>('3M');
+  const { stocks, setStocks, addStock, removeStock } = useDashboardStore();
+  const [timeRange, setTimeRange] = useState<'1D' | '1W' | '1M' | '3M'>('1M');
+  const [addingStock, setAddingStock] = useState(false);
+  const [newSymbol, setNewSymbol] = useState('');
+  const [loadingSymbol, setLoadingSymbol] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const filterHistory = (history: { date: string; price: number }[]) => {
+  // Fetch live stock data
+  const fetchStockData = useCallback(async (symbols?: string[]) => {
+    const symbolList = symbols || stocks.map(s => s.symbol);
+    if (symbolList.length === 0) return;
+
+    setIsRefreshing(true);
+    try {
+      const res = await fetch(`/api/stocks?symbols=${symbolList.join(',')}&intraday=${timeRange === '1D'}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.stocks?.length > 0) {
+        setStocks(data.stocks);
+        setLastUpdated(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+      }
+    } catch {
+      // Keep existing data on error
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [stocks, timeRange, setStocks]);
+
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    if (stocks.length === 0) return;
+    const symbols = stocks.map(s => s.symbol);
+    fetchStockData(symbols);
+    const interval = setInterval(() => fetchStockData(symbols), 60000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]);
+
+  const handleAddStock = async () => {
+    const symbol = newSymbol.trim().toUpperCase();
+    if (!symbol || stocks.some(s => s.symbol === symbol)) return;
+
+    setLoadingSymbol(true);
+    try {
+      const res = await fetch(`/api/stocks?symbols=${symbol}&intraday=false`);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      if (data.stocks?.[0]) {
+        addStock(data.stocks[0]);
+        setNewSymbol('');
+        setAddingStock(false);
+      }
+    } catch {
+      // Could show an error toast here
+    } finally {
+      setLoadingSymbol(false);
+    }
+  };
+
+  const handleRemoveStock = (symbol: string) => {
+    removeStock(symbol);
+  };
+
+  const getChartData = (stock: any) => {
+    if (timeRange === '1D' && stock.intraday?.length > 0) {
+      return stock.intraday;
+    }
     const days = timeRange === '1W' ? 7 : timeRange === '1M' ? 30 : 90;
-    return history.slice(-days);
+    return (stock.history || []).slice(-days);
+  };
+
+  const getCurrencySymbol = (currency?: string) => {
+    if (currency === 'GBP' || currency === 'GBp') return '£';
+    if (currency === 'EUR') return '€';
+    return '$';
   };
 
   return (
     <div className="space-y-6 animate-section-in">
-      <div>
-        <h2 className="text-3xl font-bold">Stock Tracker</h2>
-        <p className="text-muted-foreground mt-1">Your watched stocks</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Stock Tracker</h2>
+          <p className="text-muted-foreground mt-1">
+            Your watched stocks
+            {lastUpdated && <span className="ml-2 text-xs">(updated {lastUpdated})</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => fetchStockData()} disabled={isRefreshing}
+            className="p-2 rounded-lg bg-muted hover:bg-card-hover transition-colors disabled:opacity-50" title="Refresh">
+            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          </button>
+          <button onClick={() => setAddingStock(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+            <Plus className="h-4 w-4" /> Add stock
+          </button>
+        </div>
       </div>
 
-      {stocks.map(stock => (
-        <Card key={stock.symbol}>
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-semibold">{stock.symbol}</h3>
-              <p className="text-sm text-muted-foreground">{stock.name}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-semibold font-mono">${stock.currentPrice.toFixed(2)}</p>
-              <div className="flex items-center gap-1 justify-end">
-                {stock.changePercent >= 0 ? <ArrowUpRight className="h-4 w-4 text-success" /> : <ArrowDownRight className="h-4 w-4 text-danger" />}
-                <span className={cn('text-sm font-medium', stock.changePercent >= 0 ? 'text-success' : 'text-danger')}>
-                  {formatPercent(stock.changePercent)} (${Math.abs(stock.changeAmount).toFixed(2)})
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-2 mb-4">
-            {(['1W', '1M', '3M'] as const).map(range => (
-              <button key={range} onClick={() => setTimeRange(range)}
-                className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors',
-                  timeRange === range ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
-                )}>{range}</button>
-            ))}
-          </div>
-
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={filterHistory(stock.history)}>
-                <defs>
-                  <linearGradient id="stockGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={stock.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0.3} />
-                    <stop offset="100%" stopColor={stock.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickFormatter={formatShortDate} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} domain={['dataMin - 2', 'dataMax + 2']} tickFormatter={(v) => `$${v}`} />
-                <Tooltip content={<CustomTooltip formatter={(v: any) => `$${Number(v).toFixed(2)}`} />} />
-                <Area type="monotone" dataKey="price" name="Price"
-                  stroke={stock.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'}
-                  fill="url(#stockGradient)"
-                  strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+      {/* Add stock modal */}
+      {addingStock && (
+        <Card>
+          <div className="flex items-center gap-3">
+            <input
+              value={newSymbol}
+              onChange={e => setNewSymbol(e.target.value.toUpperCase())}
+              placeholder="Enter ticker symbol (e.g. AAPL, TSLA)"
+              className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-accent"
+              onKeyDown={e => { if (e.key === 'Enter') handleAddStock(); if (e.key === 'Escape') setAddingStock(false); }}
+              autoFocus
+            />
+            <button onClick={handleAddStock} disabled={loadingSymbol || !newSymbol.trim()}
+              className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium disabled:opacity-50">
+              {loadingSymbol ? 'Loading...' : 'Add'}
+            </button>
+            <button onClick={() => { setAddingStock(false); setNewSymbol(''); }}
+              className="p-2 rounded-lg hover:bg-muted transition-colors">
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </Card>
-      ))}
+      )}
+
+      {stocks.length === 0 && !addingStock && (
+        <Card>
+          <div className="text-center py-8">
+            <TrendingUp className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No stocks being tracked</p>
+            <button onClick={() => setAddingStock(true)}
+              className="mt-3 text-sm text-accent hover:underline">Add your first stock</button>
+          </div>
+        </Card>
+      )}
+
+      {stocks.map(stock => {
+        const chartData = getChartData(stock);
+        const curr = getCurrencySymbol(stock.currency);
+        const isPositive = stock.changePercent >= 0;
+        const gradientId = `stockGrad-${stock.symbol}`;
+
+        return (
+          <Card key={stock.symbol} className="group">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">{stock.symbol}</h3>
+                  {stock.marketState && (
+                    <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full',
+                      stock.marketState === 'REGULAR' ? 'bg-success-tint text-success' : 'bg-muted text-muted-foreground'
+                    )}>
+                      {stock.marketState === 'REGULAR' ? 'LIVE' : stock.marketState === 'PRE' ? 'PRE' : stock.marketState === 'POST' ? 'AFTER' : 'CLOSED'}
+                    </span>
+                  )}
+                  <button onClick={() => handleRemoveStock(stock.symbol)}
+                    className="p-1 rounded hover:bg-muted transition-colors opacity-0 group-hover:opacity-100" title="Remove">
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground">{stock.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-semibold font-mono">{curr}{stock.currentPrice.toFixed(2)}</p>
+                <div className="flex items-center gap-1 justify-end">
+                  {isPositive ? <ArrowUpRight className="h-4 w-4 text-success" /> : <ArrowDownRight className="h-4 w-4 text-danger" />}
+                  <span className={cn('text-sm font-medium', isPositive ? 'text-success' : 'text-danger')}>
+                    {formatPercent(stock.changePercent)} ({curr}{Math.abs(stock.changeAmount).toFixed(2)})
+                  </span>
+                </div>
+                {stock.previousClose && (
+                  <p className="text-xs text-muted-foreground mt-0.5">Prev close: {curr}{stock.previousClose.toFixed(2)}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              {(['1D', '1W', '1M', '3M'] as const).map(range => (
+                <button key={range} onClick={() => setTimeRange(range)}
+                  className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors',
+                    timeRange === range ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                  )}>{range}</button>
+              ))}
+            </div>
+
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isPositive ? 'var(--success)' : 'var(--danger)'} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={isPositive ? 'var(--success)' : 'var(--danger)'} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+                    tickFormatter={timeRange === '1D' ? (v: string) => v : formatShortDate} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                    domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                    tickFormatter={(v) => `${curr}${v}`} />
+                  <Tooltip content={<CustomTooltip formatter={(v: any) => `${curr}${Number(v).toFixed(2)}`} />} />
+                  <Area type="monotone" dataKey="price" name="Price"
+                    stroke={isPositive ? 'var(--success)' : 'var(--danger)'}
+                    fill={`url(#${gradientId})`}
+                    strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -1264,6 +1410,10 @@ export default function Dashboard() {
     setAnalytics(demoAnalytics);
     setInstagramAccounts(demoInstagramAccounts);
     setStocks(demoStocks);
+    // Fetch live stock data
+    fetch('/api/stocks?symbols=QDEL&intraday=false').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.stocks?.length > 0) setStocks(d.stocks);
+    }).catch(() => {});
     setBookings(demoBookings);
     // Try to fetch live calendar data
     fetch('/api/bookings').then(r => r.ok ? r.json() : null).then(d => {

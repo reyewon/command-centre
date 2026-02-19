@@ -38,9 +38,13 @@ export interface StockHolding {
   symbol: string;
   name: string;
   currentPrice: number;
+  previousClose?: number;
   changePercent: number;
   changeAmount: number;
+  currency?: string;
+  marketState?: string;
   history: { date: string; price: number }[];
+  intraday?: { date: string; price: number }[];
 }
 
 export interface WeatherData {
