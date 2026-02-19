@@ -521,7 +521,7 @@ function OverviewSection() {
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickFormatter={(v) => `$${v}`} domain={['dataMin - 1', 'dataMax + 1']} />
                 <Tooltip content={<CustomTooltip formatter={(v: any) => `$${Number(v).toFixed(2)}`} />} />
-                <Area type="monotone" dataKey="price" stroke={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} fill="url(#overviewStockGrad)" strokeWidth={2} />
+                <Area type="linear" dataKey="price" stroke={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} fill="url(#overviewStockGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -1356,7 +1356,7 @@ function StocksSection() {
                     domain={['dataMin - 0.5', 'dataMax + 0.5']}
                     tickFormatter={(v) => `${curr}${v}`} />
                   <Tooltip content={<CustomTooltip formatter={(v: any) => `${curr}${Number(v).toFixed(2)}`} />} />
-                  <Area type="monotone" dataKey="price" name="Price"
+                  <Area type="linear" dataKey="price" name="Price"
                     stroke={isPositive ? 'var(--success)' : 'var(--danger)'}
                     fill={`url(#${gradientId})`}
                     strokeWidth={2} />

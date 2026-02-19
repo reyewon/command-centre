@@ -73,10 +73,10 @@ async function fetchIntradayData(symbol: string) {
   }
 }
 
-// Fetch hourly data for 1W view (more granular than daily)
-async function fetchHourlyData(symbol: string) {
+// Fetch 15-minute data for 1W view (granular enough to show sharp jumps/falls)
+async function fetchDetailedWeekData(symbol: string) {
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=60m&range=5d`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=15m&range=5d`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
       next: { revalidate: 60 }, // Cache for 1 minute
@@ -90,11 +90,14 @@ async function fetchHourlyData(symbol: string) {
     const timestamps = result.timestamp || [];
     const closes = result.indicators?.quote?.[0]?.close || [];
 
-    return timestamps.map((ts: number, i: number) => ({
-      date: new Date(ts * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
-            new Date(ts * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-      price: closes[i] != null ? parseFloat(closes[i].toFixed(2)) : null,
-    })).filter((h: any) => h.price !== null);
+    return timestamps.map((ts: number, i: number) => {
+      const d = new Date(ts * 1000);
+      return {
+        date: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
+              d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        price: closes[i] != null ? parseFloat(closes[i].toFixed(2)) : null,
+      };
+    }).filter((h: any) => h.price !== null);
   } catch {
     return [];
   }
@@ -118,7 +121,7 @@ export async function GET(request: Request) {
       }
 
       if (includeHourly) {
-        const hourly = await fetchHourlyData(symbol.trim().toUpperCase());
+        const hourly = await fetchDetailedWeekData(symbol.trim().toUpperCase());
         return { ...quote, hourly };
       }
 
