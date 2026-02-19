@@ -13,7 +13,7 @@ import {
   Instagram, Globe, Receipt, Clock, MapPin, ArrowUpRight, ArrowDownRight,
   Menu, X, Home, PieChart, Wallet, CalendarDays, Store, Settings,
   Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2,
-  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun
+  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -190,7 +190,7 @@ function CommandPalette({ open, onClose, onNavigate }: {
   );
 }
 
-function Card({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
+function Card({ children, className, onClick, ...rest }: { children: React.ReactNode; className?: string; onClick?: () => void } & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       onClick={onClick}
@@ -199,6 +199,7 @@ function Card({ children, className, onClick }: { children: React.ReactNode; cla
         onClick && 'cursor-pointer hover:shadow-md transition-shadow',
         className
       )}
+      {...rest}
     >
       {children}
     </div>
@@ -1156,22 +1157,26 @@ function BookingsSection() {
 // ==================== STOCKS ====================
 
 function StocksSection() {
-  const { stocks, setStocks, addStock, removeStock } = useDashboardStore();
+  const { stocks, setStocks, addStock, removeStock, reorderStocks } = useDashboardStore();
   const [timeRange, setTimeRange] = useState<'1D' | '1W' | '1M' | '3M'>('1M');
   const [addingStock, setAddingStock] = useState(false);
   const [newSymbol, setNewSymbol] = useState('');
   const [loadingSymbol, setLoadingSymbol] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Fetch live stock data
   const fetchStockData = useCallback(async (symbols?: string[]) => {
+    // Use provided symbols, or current stocks, or persisted watchlist
     const symbolList = symbols || stocks.map(s => s.symbol);
-    if (symbolList.length === 0) return;
+    const finalList = symbolList.length > 0 ? symbolList : useDashboardStore.getState().stockSymbols;
+    if (finalList.length === 0) return;
 
     setIsRefreshing(true);
     try {
-      const res = await fetch(`/api/stocks?symbols=${symbolList.join(',')}&intraday=${timeRange === '1D'}`);
+      const res = await fetch(`/api/stocks?symbols=${finalList.join(',')}&intraday=${timeRange === '1D'}&hourly=${timeRange === '1W'}`);
       if (!res.ok) return;
       const data = await res.json();
       if (data.stocks?.length > 0) {
@@ -1185,12 +1190,14 @@ function StocksSection() {
     }
   }, [stocks, timeRange, setStocks]);
 
-  // Auto-refresh every 60 seconds
+  // Load persisted stocks on mount and auto-refresh every 60 seconds
   useEffect(() => {
-    if (stocks.length === 0) return;
-    const symbols = stocks.map(s => s.symbol);
-    fetchStockData(symbols);
-    const interval = setInterval(() => fetchStockData(symbols), 60000);
+    const symbols = useDashboardStore.getState().stockSymbols;
+    if (symbols.length > 0) fetchStockData(symbols);
+    const interval = setInterval(() => {
+      const currentSymbols = useDashboardStore.getState().stockSymbols;
+      if (currentSymbols.length > 0) fetchStockData(currentSymbols);
+    }, 60000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
@@ -1201,7 +1208,7 @@ function StocksSection() {
 
     setLoadingSymbol(true);
     try {
-      const res = await fetch(`/api/stocks?symbols=${symbol}&intraday=false`);
+      const res = await fetch(`/api/stocks?symbols=${symbol}&intraday=false&hourly=true`);
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       if (data.stocks?.[0]) {
@@ -1223,6 +1230,9 @@ function StocksSection() {
   const getChartData = (stock: any) => {
     if (timeRange === '1D' && stock.intraday?.length > 0) {
       return stock.intraday;
+    }
+    if (timeRange === '1W' && stock.hourly?.length > 0) {
+      return stock.hourly;
     }
     const days = timeRange === '1W' ? 7 : timeRange === '1M' ? 30 : 90;
     return (stock.history || []).slice(-days);
@@ -1291,18 +1301,30 @@ function StocksSection() {
         </Card>
       )}
 
-      {stocks.map(stock => {
+      {stocks.map((stock, index) => {
         const chartData = getChartData(stock);
         const curr = getCurrencySymbol(stock.currency);
         const isPositive = stock.changePercent >= 0;
         const gradientId = `stockGrad-${stock.symbol}`;
 
         return (
-          <Card key={stock.symbol} className="group">
+          <Card key={stock.symbol}
+            className={cn('group transition-all duration-200', dragOverIndex === index && 'ring-2 ring-accent ring-offset-2 ring-offset-background')}
+            draggable
+            onDragStart={(e) => { setDragIndex(index); e.dataTransfer.effectAllowed = 'move'; }}
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverIndex(index); }}
+            onDragLeave={() => setDragOverIndex(null)}
+            onDrop={(e) => { e.preventDefault(); if (dragIndex !== null && dragIndex !== index) reorderStocks(dragIndex, index); setDragIndex(null); setDragOverIndex(null); }}
+            onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+          >
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing opacity-40 group-hover:opacity-100 transition-opacity" />
                   <h3 className="text-lg font-semibold">{stock.symbol}</h3>
+                  {index === 0 && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent">HOME</span>
+                  )}
                   {stock.marketState && (
                     <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full',
                       stock.marketState === 'REGULAR' ? 'bg-success-tint text-success' : 'bg-muted text-muted-foreground'
@@ -1474,7 +1496,9 @@ export default function Dashboard() {
 
   // Reusable fetch functions for periodic refresh
   const refreshStocks = useCallback(() => {
-    fetch('/api/stocks?symbols=QDEL&hourly=true').then(r => r.ok ? r.json() : null).then(d => {
+    // Use persisted stock symbols (from localStorage) instead of hardcoded list
+    const symbols = useDashboardStore.getState().stockSymbols;
+    fetch(`/api/stocks?symbols=${symbols.join(',')}&hourly=true`).then(r => r.ok ? r.json() : null).then(d => {
       if (d?.stocks?.length > 0) setStocks(d.stocks);
     }).catch(() => {});
   }, [setStocks]);

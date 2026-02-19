@@ -1,5 +1,27 @@
 import { create } from 'zustand';
 
+// localStorage helpers for stock watchlist persistence
+const STOCK_SYMBOLS_KEY = 'rcc-stock-symbols';
+
+function getPersistedSymbols(): string[] {
+  if (typeof window === 'undefined') return ['QDEL'];
+  try {
+    const stored = localStorage.getItem(STOCK_SYMBOLS_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return ['QDEL'];
+}
+
+function persistSymbols(symbols: string[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STOCK_SYMBOLS_KEY, JSON.stringify(symbols));
+  } catch {}
+}
+
 export interface Invoice {
   id: string;
   number: number;
@@ -105,10 +127,13 @@ interface DashboardStore {
   setInstagramAccounts: (accounts: InstagramMetrics[]) => void;
 
   // Stocks
+  stockSymbols: string[]; // persisted watchlist order
   stocks: StockHolding[];
   setStocks: (stocks: StockHolding[]) => void;
   addStock: (stock: StockHolding) => void;
   removeStock: (symbol: string) => void;
+  reorderStocks: (fromIndex: number, toIndex: number) => void;
+  getStockSymbols: () => string[];
 
   // Weather
   weather: WeatherData | null;
@@ -142,10 +167,40 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   instagramAccounts: [],
   setInstagramAccounts: (instagramAccounts) => set({ instagramAccounts }),
 
+  stockSymbols: getPersistedSymbols(),
   stocks: [],
-  setStocks: (stocks) => set({ stocks }),
-  addStock: (stock) => set((state) => ({ stocks: [...state.stocks, stock] })),
-  removeStock: (symbol) => set((state) => ({ stocks: state.stocks.filter(s => s.symbol !== symbol) })),
+  setStocks: (stocks) => set((state) => {
+    // Maintain the persisted order when setting stocks
+    const symbolOrder = state.stockSymbols;
+    const sorted = [...stocks].sort((a, b) => {
+      const ai = symbolOrder.indexOf(a.symbol);
+      const bi = symbolOrder.indexOf(b.symbol);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+    return { stocks: sorted };
+  }),
+  addStock: (stock) => set((state) => {
+    const newSymbols = [...state.stockSymbols, stock.symbol];
+    persistSymbols(newSymbols);
+    return { stocks: [...state.stocks, stock], stockSymbols: newSymbols };
+  }),
+  removeStock: (symbol) => set((state) => {
+    const newSymbols = state.stockSymbols.filter(s => s !== symbol);
+    persistSymbols(newSymbols);
+    return { stocks: state.stocks.filter(s => s.symbol !== symbol), stockSymbols: newSymbols };
+  }),
+  reorderStocks: (fromIndex, toIndex) => set((state) => {
+    const newStocks = [...state.stocks];
+    const [moved] = newStocks.splice(fromIndex, 1);
+    newStocks.splice(toIndex, 0, moved);
+    const newSymbols = newStocks.map(s => s.symbol);
+    persistSymbols(newSymbols);
+    return { stocks: newStocks, stockSymbols: newSymbols };
+  }),
+  getStockSymbols: () => getPersistedSymbols(),
 
   weather: null,
   setWeather: (weather) => set({ weather }),
