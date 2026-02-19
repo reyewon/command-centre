@@ -411,22 +411,6 @@ function OverviewSection() {
             </Card>
           )}
 
-          {stocks.length > 0 && stocks.map(stock => (
-            <Card key={stock.symbol}>
-              <p className="text-sm text-muted-foreground">Stock watch</p>
-              <div className="flex items-center justify-between mt-1">
-                <span className="font-semibold">{stock.symbol}</span>
-                <span className="font-mono font-semibold">${stock.currentPrice.toFixed(2)}</span>
-              </div>
-              <div className="flex items-center gap-1 mt-0.5">
-                {stock.changePercent >= 0 ? <ArrowUpRight className="h-3.5 w-3.5 text-success" /> : <ArrowDownRight className="h-3.5 w-3.5 text-danger" />}
-                <span className={cn('text-sm', stock.changePercent >= 0 ? 'text-success' : 'text-danger')}>
-                  {formatPercent(stock.changePercent)}
-                </span>
-              </div>
-            </Card>
-          ))}
-
           <Card>
             <p className="text-sm text-muted-foreground">Year to date (2026)</p>
             <p className="text-2xl font-semibold mt-1">{formatCurrency(paidThisYear)}</p>
@@ -460,12 +444,56 @@ function OverviewSection() {
         </div>
       </div>
 
+      {stocks.length > 0 && (
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg">Stock Watch</h3>
+            <div className="flex items-center gap-4">
+              {stocks.map(stock => (
+                <div key={stock.symbol} className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-muted-foreground">{stock.symbol}</span>
+                  <span className="font-mono font-semibold">{(stock.currency === 'GBP' ? '£' : stock.currency === 'EUR' ? '€' : '$')}{stock.currentPrice.toFixed(2)}</span>
+                  <span className={cn('flex items-center gap-0.5 text-sm font-medium', stock.changePercent >= 0 ? 'text-success' : 'text-danger')}>
+                    {stock.changePercent >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+                    {formatPercent(stock.changePercent)}
+                  </span>
+                  {stock.marketState && (
+                    <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded',
+                      stock.marketState === 'REGULAR' ? 'bg-success-tint text-success' : 'bg-muted text-muted-foreground'
+                    )}>
+                      {stock.marketState === 'REGULAR' ? 'LIVE' : stock.marketState === 'PRE' ? 'PRE' : stock.marketState === 'POST' ? 'AFTER' : 'CLOSED'}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stocks[0]?.history?.slice(-30) ?? []}>
+                <defs>
+                  <linearGradient id="overviewStockGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0.3} />
+                    <stop offset="100%" stopColor={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickFormatter={formatShortDate} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickFormatter={(v) => `$${v}`} domain={['dataMin - 1', 'dataMax + 1']} />
+                <Tooltip content={<CustomTooltip formatter={(v: any) => `$${Number(v).toFixed(2)}`} />} />
+                <Area type="monotone" dataKey="price" stroke={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} fill="url(#overviewStockGrad)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <h3 className="font-semibold text-lg mb-4">Website Traffic (30 days)</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics?.dailyTraffic ?? []}>
+              <AreaChart data={analytics?.dailyTraffic?.slice(-30) ?? []}>
                 <defs>
                   <linearGradient id="websiteGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
