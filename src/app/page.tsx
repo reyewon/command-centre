@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useDashboardStore, IncomeEntry, syncToServer, syncFromServer } from '@/lib/store';
+import { useDashboardStore, IncomeEntry, AccountBalance, syncToServer, syncFromServer } from '@/lib/store';
 import {
   demoInvoices, demoIncomeEntries, demoAnalytics,
   demoInstagramAccounts, demoStocks, demoBookings
@@ -13,7 +13,7 @@ import {
   Instagram, Globe, Receipt, Clock, MapPin, ArrowUpRight, ArrowDownRight,
   Menu, X, Home, PieChart, Wallet, CalendarDays, Store, Settings,
   Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2,
-  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical, Mail, Bell, BellRing, Volume2, Pencil, Check
+  Search, Command, Target, Zap, Keyboard, Sparkles, Navigation, CloudSun, GripVertical, Mail, Bell, BellRing, Volume2, Pencil, Check, Landmark, TrendingUpDown
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -1187,6 +1187,213 @@ function AnalyticsSection() {
 
 // ==================== FINANCES ====================
 
+// ─── Account Balances Widget ────────────────────────────────────────────
+function AccountBalancesWidget() {
+  const { accountBalances, setAccountBalances } = useDashboardStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [loading, setLoading] = useState(true);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const fetchBalances = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounts');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.accounts) setAccountBalances(data.accounts);
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, [setAccountBalances]);
+
+  useEffect(() => {
+    fetchBalances();
+    const interval = setInterval(fetchBalances, 300000); // 5 min
+    return () => clearInterval(interval);
+  }, [fetchBalances]);
+
+  useEffect(() => {
+    if (editingId && inputRef.current) inputRef.current.focus();
+  }, [editingId]);
+
+  const handleEditStart = (account: AccountBalance) => {
+    if (account.autoSync) return;
+    setEditingId(account.id);
+    setEditValue(account.balance !== null ? Math.abs(account.balance).toFixed(2) : '0.00');
+  };
+
+  const handleEditSave = () => {
+    if (!editingId) return;
+    const val = parseFloat(editValue) || 0;
+    // Build updated manual balances object
+    const manualBalances: Record<string, number | string> = {};
+    accountBalances.forEach(a => {
+      if (!a.autoSync) {
+        manualBalances[a.id] = a.id === editingId ? val : (a.balance ?? 0);
+        manualBalances[`${a.id}-updated`] = a.id === editingId ? new Date().toISOString() : (a.lastUpdated ?? '');
+      }
+    });
+    syncToServer('credit-card-balances', manualBalances);
+    // Update local state
+    setAccountBalances(accountBalances.map(a =>
+      a.id === editingId ? { ...a, balance: val, lastUpdated: new Date().toISOString() } : a
+    ));
+    setEditingId(null);
+  };
+
+  const getIcon = (type: string) => {
+    if (type === 'current') return Landmark;
+    if (type === 'investment') return TrendingUpDown;
+    return CreditCard;
+  };
+
+  const currentAccounts = accountBalances.filter(a => a.type === 'current');
+  const creditAccounts = accountBalances.filter(a => a.type === 'credit');
+  const investmentAccounts = accountBalances.filter(a => a.type === 'investment');
+
+  const totalCurrent = currentAccounts.reduce((s, a) => s + (a.balance ?? 0), 0);
+  const totalCredit = creditAccounts.reduce((s, a) => s + (a.balance ?? 0), 0);
+  const totalInvestment = investmentAccounts.reduce((s, a) => s + (a.balance ?? 0), 0);
+  const netPosition = totalCurrent + totalInvestment - totalCredit;
+
+  const formatTimeAgo = (iso: string | null) => {
+    if (!iso) return 'never';
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  };
+
+  const renderAccount = (account: AccountBalance) => {
+    const Icon = getIcon(account.type);
+    const isEditing = editingId === account.id;
+    const isCredit = account.type === 'credit';
+    const hasBalance = account.balance !== null;
+
+    return (
+      <div key={account.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+            account.type === 'current' ? 'bg-success/10 text-success' :
+            account.type === 'investment' ? 'bg-accent/10 text-accent' :
+            'bg-warning/10 text-warning'
+          )}>
+            <Icon className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{account.name}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {account.autoSync ? (
+                <span className="flex items-center gap-1">
+                  <span className={cn('w-1.5 h-1.5 rounded-full', account.live ? 'bg-success' : 'bg-muted-foreground')} />
+                  {account.live ? `Updated ${formatTimeAgo(account.lastUpdated)}` : 'Not connected'}
+                </span>
+              ) : (
+                hasBalance ? `Updated ${formatTimeAgo(account.lastUpdated)}` : 'Tap to set'
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="shrink-0 ml-3">
+          {isEditing ? (
+            <form onSubmit={(e) => { e.preventDefault(); handleEditSave(); }} className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground">£</span>
+              <input ref={inputRef} type="number" step="0.01" min="0" value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={handleEditSave}
+                className="w-20 text-right text-sm font-mono bg-muted rounded-lg px-2 py-1 border border-border focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+            </form>
+          ) : (
+            <button
+              onClick={() => handleEditStart(account)}
+              disabled={account.autoSync}
+              className={cn('text-sm font-mono font-medium tabular-nums',
+                !account.autoSync && 'hover:text-accent cursor-pointer',
+                isCredit && hasBalance ? 'text-warning' : hasBalance ? 'text-foreground' : 'text-muted-foreground'
+              )}
+            >
+              {hasBalance ? `${isCredit ? '-' : ''}£${Math.abs(account.balance!).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£--.--'}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  if (loading && accountBalances.length === 0) {
+    return (
+      <Card>
+        <h3 className="font-semibold text-lg mb-4">Account Balances</h3>
+        <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">Loading...</div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-lg">Account Balances</h3>
+        <button onClick={() => { setLoading(true); fetchBalances(); }}
+          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+          <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+        </button>
+      </div>
+
+      {/* Net position summary */}
+      <div className="grid grid-cols-3 gap-3 mb-4 p-3 rounded-xl bg-muted/40">
+        <div className="text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Current</p>
+          <p className="text-sm font-mono font-semibold text-success">{totalCurrent > 0 ? `£${totalCurrent.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£--.--'}</p>
+        </div>
+        <div className="text-center border-x border-border">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Credit</p>
+          <p className="text-sm font-mono font-semibold text-warning">{totalCredit > 0 ? `-£${totalCredit.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£0.00'}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Invested</p>
+          <p className="text-sm font-mono font-semibold text-accent">{totalInvestment > 0 ? `£${totalInvestment.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£--.--'}</p>
+        </div>
+      </div>
+
+      {/* Net position bar */}
+      <div className="flex items-center justify-between mb-4 p-2.5 rounded-xl bg-card border border-border">
+        <span className="text-sm text-muted-foreground">Net position</span>
+        <span className={cn('text-base font-mono font-bold', netPosition >= 0 ? 'text-success' : 'text-warning')}>
+          {netPosition !== 0 ? `${netPosition >= 0 ? '' : '-'}£${Math.abs(netPosition).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£--.--'}
+        </span>
+      </div>
+
+      {/* Current accounts */}
+      {currentAccounts.length > 0 && (
+        <div className="mb-3">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 px-0.5">Current Account</p>
+          {currentAccounts.map(renderAccount)}
+        </div>
+      )}
+
+      {/* Investment accounts */}
+      {investmentAccounts.length > 0 && (
+        <div className="mb-3">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 px-0.5">Investments</p>
+          {investmentAccounts.map(renderAccount)}
+        </div>
+      )}
+
+      {/* Credit cards */}
+      {creditAccounts.length > 0 && (
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 px-0.5">Credit Cards</p>
+          {creditAccounts.map(renderAccount)}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function FinancesSection() {
   const { invoices, incomeEntries, taxPercentage } = useDashboardStore();
   const [financesRange, setFinancesRange] = useState<'3M' | '6M' | 'All'>('6M');
@@ -1241,6 +1448,8 @@ function FinancesSection() {
           </div>
         </Card>
       </div>
+
+      <AccountBalancesWidget />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">

@@ -4,7 +4,7 @@ const KV_REST_API_URL = process.env.KV_REST_API_URL;
 const KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN;
 
 // Allowed keys that can be synced
-const ALLOWED_KEYS = ['overview-order', 'stock-symbols'];
+const ALLOWED_KEYS = ['overview-order', 'stock-symbols', 'credit-card-balances'];
 
 async function kvGet(key: string): Promise<string | null> {
   if (!KV_REST_API_URL || !KV_REST_API_TOKEN) return null;

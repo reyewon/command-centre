@@ -131,6 +131,21 @@ export interface BookingEvent {
   allDay?: boolean;
 }
 
+export interface AccountBalance {
+  id: string;
+  name: string;
+  type: 'current' | 'credit' | 'investment';
+  balance: number | null;
+  currency: string;
+  lastUpdated: string | null;
+  autoSync: boolean;
+  live: boolean;
+  // Trading 212 extras
+  cash?: number | null;
+  investedValue?: number | null;
+  unrealisedPnL?: number | null;
+}
+
 interface DashboardStore {
   // Invoices
   invoices: Invoice[];
@@ -168,6 +183,10 @@ interface DashboardStore {
   // Bookings
   bookings: BookingEvent[];
   setBookings: (bookings: BookingEvent[]) => void;
+
+  // Account Balances
+  accountBalances: AccountBalance[];
+  setAccountBalances: (balances: AccountBalance[]) => void;
 
   // Sidebar
   sidebarOpen: boolean;
@@ -232,6 +251,9 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
 
   bookings: [],
   setBookings: (bookings) => set({ bookings }),
+
+  accountBalances: [],
+  setAccountBalances: (accountBalances) => set({ accountBalances }),
 
   sidebarOpen: true,
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
