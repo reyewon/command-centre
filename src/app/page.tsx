@@ -321,6 +321,27 @@ function OverviewSection() {
   const unpaidTotal = invoices.filter(i => i.status === 'unpaid').reduce((sum, i) => sum + i.amount, 0);
   const paidThisYear = invoices.filter(i => i.status === 'paid' && i.createdDate.startsWith('2026')).reduce((sum, i) => sum + i.amount, 0);
   const photographyIG = instagramAccounts.find(a => a.account === 'photography');
+
+  // UK 2025/26 tax estimate (self-employed, England)
+  const UK_PERSONAL_ALLOWANCE = 12570;
+  const UK_BASIC_RATE_LIMIT = 50270;
+  const UK_BASIC_RATE = 0.20;
+  const UK_CLASS4_NI_RATE = 0.06;
+  // Annualise YTD income to estimate full-year liability, then pro-rata back
+  const now = new Date();
+  const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
+  const annualisedIncome = dayOfYear > 0 ? (paidThisYear / dayOfYear) * 365 : 0;
+  const taxableIncome = Math.max(0, annualisedIncome - UK_PERSONAL_ALLOWANCE);
+  const basicRateTax = Math.min(taxableIncome, UK_BASIC_RATE_LIMIT - UK_PERSONAL_ALLOWANCE) * UK_BASIC_RATE;
+  const class4NI = Math.min(taxableIncome, UK_BASIC_RATE_LIMIT - UK_PERSONAL_ALLOWANCE) * UK_CLASS4_NI_RATE;
+  const annualTaxEstimate = basicRateTax + class4NI;
+  // Pro-rata the annual estimate to YTD
+  const ytdTaxEstimate = dayOfYear > 0 ? annualTaxEstimate * (dayOfYear / 365) : 0;
+
+  // Income breakdown for current year
+  const ytdPhotography = incomeEntries.filter(e => e.month.startsWith('2026')).reduce((sum, e) => sum + e.photography, 0);
+  const ytdRetainer = incomeEntries.filter(e => e.month.startsWith('2026')).reduce((sum, e) => sum + e.retainer, 0);
+  const ytdOther = incomeEntries.filter(e => e.month.startsWith('2026')).reduce((sum, e) => sum + e.other, 0);
   const nextBooking = bookings[0];
   const daysToNext = nextBooking ? daysUntil(nextBooking.date) : null;
 
@@ -350,12 +371,12 @@ function OverviewSection() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">Monthly Income</h3>
             <span className="text-sm text-muted-foreground">Last 11 months</span>
           </div>
-          <div className="h-64">
+          <div className="flex-1 min-h-[16rem]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={incomeEntries.map(e => ({ month: getMonthName(e.month), Photography: e.photography, Retainer: e.retainer }))}>
                 <defs>
@@ -372,6 +393,20 @@ function OverviewSection() {
                 <Bar dataKey="Retainer" stackId="a" fill="var(--accent-warm)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+          <div className="mt-4 pt-4 border-t border-border grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Photography (YTD)</p>
+              <p className="text-lg font-semibold mt-0.5">{formatCurrency(ytdPhotography)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Retainer (YTD)</p>
+              <p className="text-lg font-semibold mt-0.5">{formatCurrency(ytdRetainer)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Other (YTD)</p>
+              <p className="text-lg font-semibold mt-0.5">{formatCurrency(ytdOther)}</p>
+            </div>
           </div>
         </Card>
 
@@ -412,11 +447,16 @@ function OverviewSection() {
           )}
 
           <Card>
-            <p className="text-sm text-muted-foreground">Year to date (2026)</p>
+            <p className="text-sm text-muted-foreground">Year to date (2025/26)</p>
             <p className="text-2xl font-semibold mt-1">{formatCurrency(paidThisYear)}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Tax set aside (25%): <span className="font-medium text-foreground">{formatCurrency(paidThisYear * 0.25)}</span>
-            </p>
+            <div className="mt-2 space-y-1">
+              <p className="text-sm text-muted-foreground">
+                Est. tax to set aside: <span className="font-medium text-foreground">{formatCurrency(ytdTaxEstimate)}</span>
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Based on 20% basic rate + 6% Class 4 NI above £{(UK_PERSONAL_ALLOWANCE).toLocaleString()} threshold
+              </p>
+            </div>
           </Card>
 
           <Card>
