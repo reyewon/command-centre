@@ -313,6 +313,96 @@ function ThemeToggle() {
   );
 }
 
+// ==================== ENQUIRIES GLANCE (OVERVIEW WIDGET) ====================
+
+function EnquiriesGlance() {
+  const [emails, setEmails] = useState<any[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/enquiries')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.emails) setEmails(d.emails);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+
+    const interval = setInterval(() => {
+      fetch('/api/enquiries')
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.emails) setEmails(d.emails); })
+        .catch(() => {});
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const unread = emails.filter(e => e.isUnread);
+  const display = unread.slice(0, 2);
+
+  const formatTimeAgo = (dateStr: string) => {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  };
+
+  if (!loaded) return null;
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-accent" />
+          <h3 className="font-semibold text-lg">Latest Enquiries</h3>
+        </div>
+        {unread.length > 0 && (
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-tint text-accent">
+            {unread.length} unread
+          </span>
+        )}
+      </div>
+      {display.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">No unread enquiries — all caught up!</p>
+      ) : (
+        <div className="divide-y divide-border">
+          {display.map((email) => (
+            <a
+              key={email.id}
+              href={email.gmailUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex gap-3 py-2.5 hover:bg-muted -mx-1 px-1 rounded-lg transition-colors group"
+            >
+              <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center flex-shrink-0 text-xs font-semibold">
+                {email.from.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold truncate">{email.from}</span>
+                  <span className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0",
+                    email.account === 'professional' ? "bg-accent-tint text-accent" : "bg-muted text-muted-foreground"
+                  )}>
+                    {email.account === 'professional' ? 'PRO' : 'PERSONAL'}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">{formatTimeAgo(email.date)}</span>
+                </div>
+                <p className="text-sm text-foreground truncate mt-0.5">{email.subject}</p>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex-shrink-0" />
+            </a>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ==================== OVERVIEW ====================
 
 function OverviewSection() {
@@ -379,7 +469,7 @@ function OverviewSection() {
             <h3 className="font-semibold text-lg">Monthly Income</h3>
             <span className="text-sm text-muted-foreground">Last 11 months</span>
           </div>
-          <div className="flex-1 min-h-[16rem]">
+          <div className="flex-1 min-h-[11rem]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={incomeEntries.map(e => ({ month: getMonthName(e.month), Photography: e.photography, Retainer: e.retainer }))}>
                 <defs>
@@ -486,6 +576,8 @@ function OverviewSection() {
           </Card>
         </div>
       </div>
+
+      <EnquiriesGlance />
 
       {stocks.length > 0 && (
         <Card>

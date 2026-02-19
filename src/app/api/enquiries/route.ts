@@ -33,6 +33,21 @@ const SEARCH_QUERY = [
   '-from:taskade.com',
   '-from:manus.im',
   '-from:marketing.easyjet',
+  '-from:trainline',
+  '-from:kiwi.com',
+  '-from:booking.com',
+  '-from:airbnb',
+  '-from:skyscanner',
+  '-from:ryanair',
+  '-from:jet2',
+  '-from:tui.co.uk',
+  '-from:nationalrail',
+  '-from:uber',
+  '-from:deliveroo',
+  '-from:justeat',
+  '-from:nhs',
+  '-from:practiceplusgroup',
+  '-from:patient.info',
   // Only recent (last 3 months)
   'newer_than:3m',
 ].join(' ');
@@ -47,6 +62,11 @@ const SPAM_KEYWORDS = [
   'seo service', 'web design service', 'social media management',
   'verification code', 'password reset', 'security alert',
   'delivery notification', 'your order', 'your parcel', 'tracking number',
+  'booking confirmation', 'your trip', 'e-ticket', 'flight confirmation',
+  'train ticket', 'travel insurance', 'boarding pass', 'itinerary',
+  'your booking is confirmed', 'return trip', 'departing',
+  'hospital', 'appointment reminder', 'medical', 'gp surgery', 'practice plus',
+  'wellsoon', 'peyronie',
 ];
 
 // Known spam sender patterns
@@ -55,6 +75,9 @@ const SPAM_SENDERS = [
   /fiverr/i, /upwork/i, /freelancer\.com/i,
   /@outlook\.in$/i, /@yahoo\.in$/i,
   /marketing@/i, /promo@/i, /sales@/i, /info@(?!ryanstanikk)/i,
+  /trainline/i, /kiwi\.com/i, /booking\.com/i, /skyscanner/i,
+  /airbnb/i, /ryanair/i, /jet2/i, /nationalrail/i,
+  /nhs\.uk/i, /nhs\.net/i, /practiceplusgroup/i, /patient\.info/i,
 ];
 
 interface EmailMessage {
