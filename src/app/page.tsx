@@ -1582,8 +1582,8 @@ export default function Dashboard() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}>
           <div className="p-5 pt-4">
-            <div className="hidden lg:flex justify-center mb-2">
-              <img src="/funk.png" alt="Ryan Stanikk" className="w-28 h-auto object-contain drop-shadow-lg" />
+            <div className="hidden lg:flex justify-center mb-1 -mt-1">
+              <img src="/funk.png" alt="Ryan Stanikk" className="w-40 h-auto object-contain drop-shadow-lg" />
             </div>
             <div className="flex items-center justify-between">
               <h1 className="text-base font-bold tracking-tight">Command Centre</h1>
