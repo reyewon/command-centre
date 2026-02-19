@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDashboardStore } from '@/lib/store';
 import {
   demoInvoices, demoIncomeEntries, demoAnalytics,
@@ -12,7 +12,8 @@ import {
   Calendar, Cloud, Sun, Moon, CloudRain, Eye, Users, MousePointerClick,
   Instagram, Globe, Receipt, Clock, MapPin, ArrowUpRight, ArrowDownRight,
   Menu, X, Home, PieChart, Wallet, CalendarDays, Store, Settings,
-  Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2
+  Plus, Minus, RefreshCw, ExternalLink, CreditCard, Plane, Building2,
+  Search, Command, Target, Zap, Keyboard
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -30,6 +31,164 @@ const NAV_ITEMS = [
 ];
 
 const PIE_COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#f59e0b', '#10b981', '#6b7280'];
+
+// ==================== ANIMATED NUMBER ====================
+
+function useAnimatedNumber(target: number, duration = 1200) {
+  const [value, setValue] = useState(0);
+  const prevTarget = useRef(0);
+  const frameRef = useRef<number>(0);
+
+  useEffect(() => {
+    const start = prevTarget.current;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(start + (target - start) * eased);
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      } else {
+        prevTarget.current = target;
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(animate);
+    return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
+  }, [target, duration]);
+
+  return value;
+}
+
+// ==================== LIVE CLOCK ====================
+
+function useLiveClock() {
+  const [time, setTime] = useState('');
+  const [date, setDate] = useState('');
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      setTime(now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+      setDate(now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }));
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return { time, date };
+}
+
+// ==================== PROGRESS RING ====================
+
+function ProgressRing({ progress, size = 120, strokeWidth = 8, color = 'var(--accent)', children }: {
+  progress: number; size?: number; strokeWidth?: number; color?: string; children?: React.ReactNode;
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const animatedProgress = useAnimatedNumber(Math.min(progress, 100), 1500);
+  const offset = circumference - (animatedProgress / 100) * circumference;
+
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--border)" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={strokeWidth}
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ==================== COMMAND PALETTE ====================
+
+function CommandPalette({ open, onClose, onNavigate }: {
+  open: boolean; onClose: () => void; onNavigate: (section: string) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setQuery('');
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  const commands = [
+    { id: 'overview', label: 'Go to Overview', shortcut: '1', icon: Home, section: 'overview' },
+    { id: 'analytics', label: 'Go to Analytics', shortcut: '2', icon: BarChart3, section: 'analytics' },
+    { id: 'finances', label: 'Go to Finances', shortcut: '3', icon: Wallet, section: 'finances' },
+    { id: 'instagram', label: 'Go to Instagram', shortcut: '4', icon: Instagram, section: 'instagram' },
+    { id: 'bookings', label: 'Go to Bookings', shortcut: '5', icon: CalendarDays, section: 'bookings' },
+    { id: 'stocks', label: 'Go to Stocks', shortcut: '6', icon: TrendingUp, section: 'stocks' },
+    { id: 'clients', label: 'Go to Clients', shortcut: '7', icon: Store, section: 'clients' },
+    { id: 'pixieset', label: 'Open Pixieset', shortcut: '', icon: ExternalLink, action: () => window.open('https://studio.pixieset.com/invoices', '_blank') },
+    { id: 'ga', label: 'Open Google Analytics', shortcut: '', icon: ExternalLink, action: () => window.open('https://analytics.google.com', '_blank') },
+    { id: 'gbp', label: 'Open Google Business', shortcut: '', icon: ExternalLink, action: () => window.open('https://business.google.com', '_blank') },
+  ];
+
+  const filtered = commands.filter(c => c.label.toLowerCase().includes(query.toLowerCase()));
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[20vh]" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
+      <div className="relative w-full max-w-lg mx-4 glass-card rounded-xl shadow-2xl overflow-hidden animate-scale-in"
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+          <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)}
+            placeholder="Search commands..." className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-sm"
+            onKeyDown={e => {
+              if (e.key === 'Escape') onClose();
+              if (e.key === 'Enter' && filtered.length > 0) {
+                const cmd = filtered[0];
+                if (cmd.section) onNavigate(cmd.section);
+                if ((cmd as any).action) (cmd as any).action();
+                onClose();
+              }
+            }}
+          />
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono">esc</kbd>
+        </div>
+        <div className="max-h-64 overflow-y-auto py-2">
+          {filtered.map(cmd => (
+            <button key={cmd.id}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-card-hover transition-colors text-left"
+              onClick={() => {
+                if (cmd.section) onNavigate(cmd.section);
+                if ((cmd as any).action) (cmd as any).action();
+                onClose();
+              }}>
+              <cmd.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="flex-1">{cmd.label}</span>
+              {cmd.shortcut && (
+                <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono">{cmd.shortcut}</kbd>
+              )}
+            </button>
+          ))}
+          {filtered.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">No commands found</p>
+          )}
+        </div>
+        <div className="px-4 py-2 border-t border-border flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-muted font-mono">↵</kbd> select</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-muted font-mono">esc</kbd> close</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-muted font-mono">1-7</kbd> quick nav</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Card({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
   return (
@@ -143,6 +302,7 @@ function ThemeToggle() {
 
 function OverviewSection() {
   const { invoices, incomeEntries, analytics, instagramAccounts, bookings, weather, stocks } = useDashboardStore();
+  const { time, date } = useLiveClock();
 
   const currentMonth = incomeEntries[incomeEntries.length - 1];
   const totalThisMonth = currentMonth ? currentMonth.photography + currentMonth.retainer + currentMonth.other : 0;
@@ -152,11 +312,22 @@ function OverviewSection() {
   const nextBooking = bookings[0];
   const daysToNext = nextBooking ? daysUntil(nextBooking.date) : null;
 
+  // Monthly goal tracking
+  const monthlyGoal = 4000;
+  const monthProgress = Math.min((totalThisMonth / monthlyGoal) * 100, 100);
+  const goalColor = monthProgress < 50 ? 'var(--danger)' : monthProgress < 80 ? 'var(--warning)' : 'var(--success)';
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">{getGreeting()}, Ryan</h2>
-        <p className="text-muted-foreground mt-1">Here's your business at a glance</p>
+    <div className="space-y-6 animate-section-in">
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">{getGreeting()}, Ryan</h2>
+          <p className="text-muted-foreground mt-1">Here's your business at a glance</p>
+        </div>
+        <div className="text-right hidden sm:block">
+          <p className="text-2xl font-mono font-semibold tracking-tight">{time}</p>
+          <p className="text-sm text-muted-foreground">{date}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -251,6 +422,29 @@ function OverviewSection() {
               Tax set aside (25%): <span className="font-medium text-foreground">{formatCurrency(paidThisYear * 0.25)}</span>
             </p>
           </Card>
+
+          <Card>
+            <p className="text-sm text-muted-foreground mb-3">Monthly goal</p>
+            <div className="flex items-center gap-4">
+              <ProgressRing progress={monthProgress} size={80} strokeWidth={6} color={goalColor}>
+                <span className="text-sm font-semibold">{Math.round(monthProgress)}%</span>
+              </ProgressRing>
+              <div className="flex-1 min-w-0">
+                <p className="text-lg font-semibold">{formatCurrency(totalThisMonth)}</p>
+                <p className="text-xs text-muted-foreground">of {formatCurrency(monthlyGoal)} target</p>
+                {totalThisMonth < monthlyGoal && (
+                  <p className="text-xs mt-1" style={{ color: goalColor }}>
+                    {formatCurrency(monthlyGoal - totalThisMonth)} remaining
+                  </p>
+                )}
+                {totalThisMonth >= monthlyGoal && (
+                  <p className="text-xs text-success mt-1 flex items-center gap-1">
+                    <Zap className="h-3 w-3" /> Goal reached!
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 
@@ -305,7 +499,7 @@ function AnalyticsSection() {
   if (!analytics) return <p className="text-muted-foreground">Loading analytics...</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Website Analytics</h2>
         <p className="text-muted-foreground mt-1">ryanstanikk.co.uk (last 30 days)</p>
@@ -406,7 +600,7 @@ function FinancesSection() {
   const pieData = Object.entries(clientTotals).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Finances</h2>
         <p className="text-muted-foreground mt-1">Income tracking and tax overview</p>
@@ -517,7 +711,7 @@ function InstagramSection() {
   const { instagramAccounts } = useDashboardStore();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Instagram Insights</h2>
         <p className="text-muted-foreground mt-1">Performance across your accounts</p>
@@ -594,7 +788,7 @@ function BookingsSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Bookings</h2>
         <p className="text-muted-foreground mt-1">Upcoming shoots and sessions</p>
@@ -653,7 +847,7 @@ function StocksSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Stock Tracker</h2>
         <p className="text-muted-foreground mt-1">Your watched stocks</p>
@@ -721,7 +915,7 @@ function ClientsSection() {
   const padharoTotal = padharoInvoices.reduce((sum, i) => sum + i.amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Client Management</h2>
         <p className="text-muted-foreground mt-1">Padharo and Popado overview</p>
@@ -763,7 +957,7 @@ function ClientsSection() {
 
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-success-tint flex items-center justify-center">
             <Store className="h-5 w-5 text-success" />
           </div>
           <div>
@@ -801,6 +995,16 @@ export default function Dashboard() {
     setStocks, setBookings, setWeather,
   } = useDashboardStore();
 
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [sectionKey, setSectionKey] = useState(0);
+  const { time: sidebarTime } = useLiveClock();
+
+  const handleNavigate = useCallback((section: string) => {
+    setActiveSection(section);
+    setSectionKey(k => k + 1);
+    if (window.innerWidth < 1024) setSidebarOpen(false);
+  }, [setActiveSection, setSidebarOpen]);
+
   useEffect(() => {
     setInvoices(demoInvoices);
     setIncomeEntries(demoIncomeEntries);
@@ -814,6 +1018,37 @@ export default function Dashboard() {
     });
     fetch('/api/weather').then(r => r.ok ? r.json() : null).then(d => { if (d) setWeather(d); }).catch(() => {});
   }, [setInvoices, setIncomeEntries, setAnalytics, setInstagramAccounts, setStocks, setBookings, setWeather]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      // Cmd/Ctrl + K: command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
+      // Number keys 1-7: quick navigation
+      const sections = ['overview', 'analytics', 'finances', 'instagram', 'bookings', 'stocks', 'clients'];
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= 7 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        handleNavigate(sections[num - 1]);
+        return;
+      }
+
+      // Escape: close command palette
+      if (e.key === 'Escape') {
+        setCommandPaletteOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleNavigate]);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -830,6 +1065,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} onNavigate={handleNavigate} />
+
       {/* Mobile header */}
       <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card sticky top-0 z-50">
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-muted">
@@ -846,22 +1083,37 @@ export default function Dashboard() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}>
           <div className="p-5 pt-6">
-            <h1 className="text-base font-bold tracking-tight">Command Centre</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-base font-bold tracking-tight">Command Centre</h1>
+              <span className="text-xs font-mono text-muted-foreground tabular-nums">{sidebarTime}</span>
+            </div>
             <p className="text-xs text-muted-foreground mt-0.5">Ryan Stanikk Photography</p>
           </div>
           <nav className="px-3 space-y-0.5 flex-1">
-            {NAV_ITEMS.map(item => (
+            {NAV_ITEMS.map((item, i) => (
               <button key={item.id}
-                onClick={() => { setActiveSection(item.id); if (window.innerWidth < 1024) setSidebarOpen(false); }}
+                onClick={() => handleNavigate(item.id)}
                 className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors group',
                   activeSection === item.id ? 'bg-accent-tint text-accent' : 'text-muted-foreground hover:text-foreground hover:bg-sidebar-hover'
                 )}>
                 <item.icon className="h-4 w-4" />
-                {item.label}
+                <span className="flex-1 text-left">{item.label}</span>
+                <kbd className="hidden group-hover:inline text-[10px] font-mono px-1 py-0.5 rounded bg-muted text-muted-foreground">{i + 1}</kbd>
               </button>
             ))}
           </nav>
+
+          {/* Command palette trigger */}
+          <div className="px-3 mb-2">
+            <button onClick={() => setCommandPaletteOpen(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-hover transition-colors border border-border">
+              <Search className="h-3.5 w-3.5" />
+              <span className="flex-1 text-left text-xs">Search...</span>
+              <kbd className="text-[10px] font-mono px-1 py-0.5 rounded bg-muted">⌘K</kbd>
+            </button>
+          </div>
+
           <div className="p-4 border-t border-sidebar-border space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1">
@@ -881,7 +1133,7 @@ export default function Dashboard() {
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
         <main className="flex-1 min-h-screen">
-          <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+          <div key={sectionKey} className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
             {renderSection()}
           </div>
         </main>
