@@ -176,9 +176,11 @@ export const demoStocks: StockHolding[] = [
 
 // Real Google Calendar bookings (fallback when API not connected)
 export const demoBookings: BookingEvent[] = [
-  { id: 'doc-1', title: 'Doctors - 1.45pm', client: 'Meeting', date: '2026-02-23', time: '13:45', endTime: '14:45', type: 'meeting', calendarSource: 'meetings' },
-  { id: 'ph-above', title: 'Above Barbers', client: 'Above Barbers', date: '2026-02-26', type: 'photography', calendarSource: 'photography', allDay: true },
-  { id: 'ph-network', title: 'City Networking', client: 'City Networking', date: '2026-03-10', type: 'photography', calendarSource: 'photography', allDay: true },
+  { id: 'doc-1', title: 'Doctors Appointment', client: 'Meeting', date: '2026-02-23', time: '13:45', endTime: '14:45', type: 'meeting', calendarSource: 'meetings' },
+  { id: 'ph-above', title: 'Above Barbers', client: 'Above Barbers', date: '2026-02-26', time: '11:00', endTime: '15:00', type: 'photography', calendarSource: 'photography', location: 'Above Barbers, 23 Carlton Pl, Southampton SO15 2DY, UK', description: '£330 Payment' },
+  { id: 'partner-lucy', title: 'Lucy', client: 'Personal', date: '2026-02-28', type: 'personal', calendarSource: 'partners', allDay: true },
+  { id: 'partner-el', title: 'El', client: 'Personal', date: '2026-03-06', type: 'personal', calendarSource: 'partners', allDay: true },
+  { id: 'ph-network', title: 'City Networking', client: 'City Networking', date: '2026-03-10', time: '17:30', endTime: '20:00', type: 'photography', calendarSource: 'photography', location: 'Showcase Cinema de Lux Southampton, Level 4, West Quay Shopping Centre, Southampton SO15 1DE, UK', description: '£200 Payment' },
   { id: 'ph-agm', title: 'AGM', client: 'AGM', date: '2026-04-01', type: 'photography', calendarSource: 'photography', allDay: true },
   { id: 'tr-verona', title: 'Accommodation in Verona', client: 'Travel', date: '2026-04-20', endDate: '2026-04-25', type: 'travel', location: 'Piazza Francesco Viviani, 7, 37121 Verona VR, Italy', description: 'Airbnb: [PALAZZOPOSTE] - IL PRESTIGIOSO. Confirmation code: HMZTAQCDBX', calendarSource: 'primary', allDay: true },
   { id: 'tr-malaga-flight', title: 'Flight to Malaga (VY 6619)', client: 'Travel', date: '2026-04-22', time: '13:25', endTime: '16:25', type: 'travel', location: 'London LGW', calendarSource: 'primary' },

@@ -510,7 +510,7 @@ function OverviewSection() {
           </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stocks[0]?.history?.slice(-7) ?? []}>
+              <AreaChart data={stocks[0]?.hourly ?? stocks[0]?.history?.slice(-7) ?? []}>
                 <defs>
                   <linearGradient id="overviewStockGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} stopOpacity={0.3} />
@@ -518,7 +518,7 @@ function OverviewSection() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickFormatter={formatShortDate} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickFormatter={(v) => `$${v}`} domain={['dataMin - 1', 'dataMax + 1']} />
                 <Tooltip content={<CustomTooltip formatter={(v: any) => `$${Number(v).toFixed(2)}`} />} />
                 <Area type="monotone" dataKey="price" stroke={stocks[0]?.changePercent >= 0 ? 'var(--success)' : 'var(--danger)'} fill="url(#overviewStockGrad)" strokeWidth={2} />
@@ -1121,8 +1121,8 @@ function BookingsSection() {
                       </span>
                     )}
                     {showWeather && weather && (
-                      <span className="flex items-center gap-1">
-                        <span className="text-base">{getWeatherEmoji(weather.icon)}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-2xl leading-none">{getWeatherEmoji(weather.icon)}</span>
                         <span>{weather.temp}°C</span>
                       </span>
                     )}
@@ -1472,27 +1472,51 @@ export default function Dashboard() {
     if (window.innerWidth < 1024) setSidebarOpen(false);
   }, [setActiveSection, setSidebarOpen]);
 
+  // Reusable fetch functions for periodic refresh
+  const refreshStocks = useCallback(() => {
+    fetch('/api/stocks?symbols=QDEL&hourly=true').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.stocks?.length > 0) setStocks(d.stocks);
+    }).catch(() => {});
+  }, [setStocks]);
+
+  const refreshBookings = useCallback(() => {
+    fetch('/api/bookings').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.live && d.events?.length > 0) setBookings(d.events);
+    }).catch(() => {});
+  }, [setBookings]);
+
+  const refreshWeather = useCallback(() => {
+    fetch('/api/weather').then(r => r.ok ? r.json() : null).then(d => { if (d) setWeather(d); }).catch(() => {});
+  }, [setWeather]);
+
   useEffect(() => {
     setInvoices(demoInvoices);
     setIncomeEntries(demoIncomeEntries);
     setAnalytics(demoAnalytics);
     setInstagramAccounts(demoInstagramAccounts);
     setStocks(demoStocks);
-    // Fetch live stock data
-    fetch('/api/stocks?symbols=QDEL&intraday=false').then(r => r.ok ? r.json() : null).then(d => {
-      if (d?.stocks?.length > 0) setStocks(d.stocks);
-    }).catch(() => {});
     setBookings(demoBookings);
-    // Try to fetch live calendar data
-    fetch('/api/bookings').then(r => r.ok ? r.json() : null).then(d => {
-      if (d?.live && d.events?.length > 0) setBookings(d.events);
-    }).catch(() => {});
     setWeather({
       temp: 8, feelsLike: 5, description: 'partly cloudy', icon: 'clouds',
       humidity: 72, windSpeed: 14, forecast: [],
     });
-    fetch('/api/weather').then(r => r.ok ? r.json() : null).then(d => { if (d) setWeather(d); }).catch(() => {});
-  }, [setInvoices, setIncomeEntries, setAnalytics, setInstagramAccounts, setStocks, setBookings, setWeather]);
+
+    // Initial live data fetch
+    refreshStocks();
+    refreshBookings();
+    refreshWeather();
+
+    // Refresh everything every 60 seconds
+    const stockInterval = setInterval(refreshStocks, 60000);
+    const bookingInterval = setInterval(refreshBookings, 60000);
+    const weatherInterval = setInterval(refreshWeather, 60000);
+
+    return () => {
+      clearInterval(stockInterval);
+      clearInterval(bookingInterval);
+      clearInterval(weatherInterval);
+    };
+  }, [setInvoices, setIncomeEntries, setAnalytics, setInstagramAccounts, setStocks, setBookings, setWeather, refreshStocks, refreshBookings, refreshWeather]);
 
   // Keyboard shortcuts
   useEffect(() => {

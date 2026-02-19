@@ -45,6 +45,7 @@ export interface StockHolding {
   marketState?: string;
   history: { date: string; price: number }[];
   intraday?: { date: string; price: number }[];
+  hourly?: { date: string; price: number }[];
 }
 
 export interface WeatherData {

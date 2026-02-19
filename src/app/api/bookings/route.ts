@@ -6,7 +6,10 @@ const CALENDAR_IDS = {
   photography: 'f4ea15fdd1ea8f5f2782618c36cd8de9422488ed6243d9707e0ff5de0ecda514@group.calendar.google.com',
   primary: 'rstanikk@gmail.com',
   meetings: 'ca1aca631e5c1f08b853debcfdb259465485359f8a498c35d5db07506210dfb1@group.calendar.google.com',
-  travel: '7c9a97ae8f4b4e510e204589e804f9a88b864bb112dc9c7a1978cd2dd67762f4@group.calendar.google.com',
+  travel: '64baf24171617db4cc34f2827555f3a9fb4384da727176b5e1301f50e56bcb1f@group.calendar.google.com',
+  partners: 'b9234fa5d3cc4f610324b0e13ba689a10930d494a3e446bae19c7bdb2bc14106@group.calendar.google.com',
+  leisure: '7c9a97ae8f4b4e510e204589e804f9a88b864bb112dc9c7a1978cd2dd67762f4@group.calendar.google.com',
+  family: 'fa56c0ff55d718808237ed482284ec30a486501204b2fc498404a6bda1aa339a@group.calendar.google.com',
 };
 
 // Map calendar source to booking type
@@ -14,6 +17,9 @@ function getEventType(calendarId: string, summary: string): 'photography' | 'ret
   if (calendarId === CALENDAR_IDS.photography) return 'photography';
   if (calendarId === CALENDAR_IDS.meetings) return 'meeting';
   if (calendarId === CALENDAR_IDS.travel) return 'travel';
+  if (calendarId === CALENDAR_IDS.partners) return 'personal';
+  if (calendarId === CALENDAR_IDS.leisure) return 'personal';
+  if (calendarId === CALENDAR_IDS.family) return 'personal';
 
   // Primary calendar: detect type from content
   const lowerSummary = summary.toLowerCase();

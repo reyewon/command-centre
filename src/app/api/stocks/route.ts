@@ -73,10 +73,39 @@ async function fetchIntradayData(symbol: string) {
   }
 }
 
+// Fetch hourly data for 1W view (more granular than daily)
+async function fetchHourlyData(symbol: string) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=60m&range=5d`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      next: { revalidate: 60 }, // Cache for 1 minute
+    });
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    const result = data?.chart?.result?.[0];
+    if (!result) return [];
+
+    const timestamps = result.timestamp || [];
+    const closes = result.indicators?.quote?.[0]?.close || [];
+
+    return timestamps.map((ts: number, i: number) => ({
+      date: new Date(ts * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
+            new Date(ts * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      price: closes[i] != null ? parseFloat(closes[i].toFixed(2)) : null,
+    })).filter((h: any) => h.price !== null);
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbols = searchParams.get('symbols')?.split(',') || ['QDEL'];
   const includeIntraday = searchParams.get('intraday') === 'true';
+
+  const includeHourly = searchParams.get('hourly') === 'true';
 
   const results = await Promise.all(
     symbols.map(async (symbol) => {
@@ -86,6 +115,11 @@ export async function GET(request: Request) {
       if (includeIntraday) {
         const intraday = await fetchIntradayData(symbol.trim().toUpperCase());
         return { ...quote, intraday };
+      }
+
+      if (includeHourly) {
+        const hourly = await fetchHourlyData(symbol.trim().toUpperCase());
+        return { ...quote, hourly };
       }
 
       return quote;
