@@ -174,13 +174,16 @@ export const demoStocks: StockHolding[] = [
   },
 ];
 
-// Real Google Calendar bookings
+// Real Google Calendar bookings (fallback when API not connected)
 export const demoBookings: BookingEvent[] = [
-  { id: '1', title: 'Above Barbers', client: 'Above Barbers', date: '2026-02-26', type: 'photography', location: 'Southampton' },
-  { id: '2', title: 'R6 & 24mm Lens Hire', client: 'Equipment', date: '2026-02-27', type: 'photography', location: 'Hire' },
-  { id: '3', title: 'City Networking', client: 'Networking', date: '2026-03-10', type: 'photography', location: 'Southampton' },
-  { id: '4', title: 'AGM', client: 'Business', date: '2026-04-01', type: 'photography' },
-  { id: '5', title: 'Accommodation in Verona', client: 'Travel', date: '2026-04-20', type: 'personal', location: 'Verona, Italy' },
-  { id: '6', title: 'Flight to Malaga VY 6619', client: 'Travel', date: '2026-04-22', time: 'AM', type: 'personal', location: 'Malaga, Spain' },
-  { id: '7', title: 'Coeo Frailes Design Apartments', client: 'Travel', date: '2026-04-22', type: 'personal', location: 'Malaga, Spain' },
+  { id: 'doc-1', title: 'Doctors - 1.45pm', client: 'Meeting', date: '2026-02-23', time: '13:45', endTime: '14:45', type: 'meeting', calendarSource: 'meetings' },
+  { id: 'ph-above', title: 'Above Barbers', client: 'Above Barbers', date: '2026-02-26', type: 'photography', calendarSource: 'photography', allDay: true },
+  { id: 'ph-network', title: 'City Networking', client: 'City Networking', date: '2026-03-10', type: 'photography', calendarSource: 'photography', allDay: true },
+  { id: 'ph-agm', title: 'AGM', client: 'AGM', date: '2026-04-01', type: 'photography', calendarSource: 'photography', allDay: true },
+  { id: 'tr-verona', title: 'Accommodation in Verona', client: 'Travel', date: '2026-04-20', endDate: '2026-04-25', type: 'travel', location: 'Piazza Francesco Viviani, 7, 37121 Verona VR, Italy', description: 'Airbnb: [PALAZZOPOSTE] - IL PRESTIGIOSO. Confirmation code: HMZTAQCDBX', calendarSource: 'primary', allDay: true },
+  { id: 'tr-malaga-flight', title: 'Flight to Malaga (VY 6619)', client: 'Travel', date: '2026-04-22', time: '13:25', endTime: '16:25', type: 'travel', location: 'London LGW', calendarSource: 'primary' },
+  { id: 'tr-malaga-stay', title: 'Stay at Coeo Frailes Design Apartments', client: 'Travel', date: '2026-04-22', endDate: '2026-04-26', type: 'travel', location: 'Coeo Frailes Design Apartments, Malaga', calendarSource: 'primary', allDay: true },
+  { id: 'tr-berlin-accom', title: 'Accommodation in Berlin', client: 'Travel', date: '2026-05-07', endDate: '2026-05-11', type: 'travel', description: 'Airbnb: Berlin Getaway', calendarSource: 'primary', allDay: true },
+  { id: 'tr-berlin-flight', title: 'Flight to Berlin', client: 'Travel', date: '2026-05-07', time: '19:50', endTime: '22:45', type: 'travel', description: 'easyJet flight EJU8627 from London Gatwick (North Terminal) to Berlin Brandenburg (Terminal 1). Booking reference: KBBZJ1G', calendarSource: 'primary' },
+  { id: 'tr-berlin-return', title: 'Flight from Berlin', client: 'Travel', date: '2026-05-11', time: '18:05', endTime: '19:05', type: 'travel', description: 'easyJet flight EJU8626 from Berlin Brandenburg (Terminal 1) to London Gatwick (North Terminal). Booking reference: KBBZJ1G', calendarSource: 'primary' },
 ];

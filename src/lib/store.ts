@@ -72,9 +72,14 @@ export interface BookingEvent {
   title: string;
   client: string;
   date: string;
+  endDate?: string;
   time?: string;
+  endTime?: string;
   location?: string;
-  type: 'photography' | 'retainer' | 'personal';
+  description?: string;
+  type: 'photography' | 'retainer' | 'personal' | 'meeting' | 'travel';
+  calendarSource?: string;
+  allDay?: boolean;
 }
 
 interface DashboardStore {

@@ -894,10 +894,22 @@ function InstagramSection() {
 
 function BookingsSection() {
   const { bookings, weather } = useDashboardStore();
+  const [bookingsFilter, setBookingsFilter] = useState<'all' | 'photography' | 'travel' | 'meeting'>('all');
+
   const typeColors: Record<string, string> = {
     photography: 'bg-accent-tint text-accent',
     retainer: 'bg-accent-warm-tint text-accent-warm',
     personal: 'bg-muted text-muted-foreground',
+    meeting: 'bg-warning-tint text-warning',
+    travel: 'bg-success-tint text-success',
+  };
+
+  const typeIcons: Record<string, React.ElementType> = {
+    photography: Camera,
+    retainer: ChefHat,
+    personal: CalendarDays,
+    meeting: Users,
+    travel: Plane,
   };
 
   const getWeatherEmoji = (icon: string) => {
@@ -907,41 +919,106 @@ function BookingsSection() {
     return '⛅';
   };
 
-  const getMapUrl = (booking: { title: string; location?: string }) => {
-    if (!booking.location || booking.location === 'Hire') return null;
-    // Use business name + location for better search results
-    const query = booking.location.includes(',')
-      ? booking.location  // Already specific (e.g. "Verona, Italy")
-      : `${booking.title} ${booking.location}`;  // e.g. "Above Barbers Southampton"
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  // Smart map URL: use Google Calendar location first, then infer from title + Southampton
+  const getMapUrl = (booking: { title: string; location?: string; type: string; calendarSource?: string }) => {
+    if (booking.location) {
+      // Has explicit location from Google Calendar
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`;
+    }
+    // Photography shoots without location: try title + Southampton (most are local)
+    if (booking.type === 'photography' && booking.calendarSource === 'photography') {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.title + ' Southampton')}`;
+    }
+    return null;
   };
 
+  // Smart display location: show clean version of Google Calendar location, or infer
+  const getDisplayLocation = (booking: { title: string; location?: string; type: string; calendarSource?: string }) => {
+    if (booking.location) {
+      // Shorten long addresses for display
+      const loc = booking.location;
+      if (loc.length > 40) {
+        // Extract city/area from end of address
+        const parts = loc.split(',').map(s => s.trim());
+        return parts.length > 2 ? `${parts[0]}, ${parts[parts.length - 2]}` : parts[0];
+      }
+      return loc;
+    }
+    // Photography shoots without location: infer Southampton
+    if (booking.type === 'photography' && booking.calendarSource === 'photography') {
+      return 'Southampton (inferred)';
+    }
+    return null;
+  };
+
+  // Determine if weather should show
+  const shouldShowWeather = (booking: { type: string; location?: string; calendarSource?: string; date: string }) => {
+    if (!weather) return false;
+    // Show weather for photography shoots that are local (Southampton area) and within 7 days
+    const days = daysUntil(booking.date);
+    if (days > 7 || days < 0) return false;
+    if (booking.type !== 'photography') return false;
+    if (booking.location && !booking.location.toLowerCase().includes('southampton') && booking.calendarSource !== 'photography') return false;
+    return true;
+  };
+
+  const filteredBookings = bookingsFilter === 'all'
+    ? bookings
+    : bookings.filter(b => b.type === bookingsFilter);
+
   const photographyBookings = bookings.filter(b => b.type === 'photography');
-  const upcomingPhotography = photographyBookings.slice(0, 3);
-  const shootsBooked = photographyBookings.length;
-  const bookingInsight = `You have ${shootsBooked} photography ${shootsBooked === 1 ? 'shoot' : 'shoots'} booked. ${upcomingPhotography.length > 0 ? `Next ${upcomingPhotography.length} ${upcomingPhotography.length === 1 ? 'is' : 'are'} confirmed.` : 'Great to fill your calendar!'}`;
+  const travelBookings = bookings.filter(b => b.type === 'travel');
+  const meetingBookings = bookings.filter(b => b.type === 'meeting');
+
+  const nextShoot = photographyBookings[0];
+  const nextShootDays = nextShoot ? daysUntil(nextShoot.date) : null;
+  const travelCount = travelBookings.length;
+
+  const insightParts: string[] = [];
+  if (photographyBookings.length > 0) {
+    insightParts.push(`${photographyBookings.length} photography ${photographyBookings.length === 1 ? 'shoot' : 'shoots'} booked${nextShootDays !== null ? ` (next in ${nextShootDays}d)` : ''}`);
+  }
+  if (travelCount > 0) {
+    insightParts.push(`${travelCount} travel ${travelCount === 1 ? 'event' : 'events'} coming up`);
+  }
+  if (meetingBookings.length > 0) {
+    insightParts.push(`${meetingBookings.length} ${meetingBookings.length === 1 ? 'meeting' : 'meetings'} scheduled`);
+  }
+  const bookingInsight = insightParts.join('. ') + '.';
 
   return (
     <div className="space-y-6 animate-section-in">
       <div>
         <h2 className="text-3xl font-bold">Bookings</h2>
-        <p className="text-muted-foreground mt-1">Upcoming shoots and sessions</p>
+        <p className="text-muted-foreground mt-1">Upcoming shoots, travel, and meetings</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <StatCard title="Photography" value={bookings.filter(b => b.type === 'photography').length} icon={Camera} />
-        <StatCard title="Retainer" value={bookings.filter(b => b.type === 'retainer').length} icon={ChefHat} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard title="Photography" value={photographyBookings.length} icon={Camera} />
+        <StatCard title="Travel" value={travelBookings.length} icon={Plane} />
+        <StatCard title="Meetings" value={meetingBookings.length} icon={Users} />
         <StatCard title="Total" value={bookings.length} icon={CalendarDays} />
       </div>
 
       <Card>
-        <h3 className="font-semibold text-lg mb-4">Schedule</h3>
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="font-semibold text-lg">Schedule</h3>
+          <div className="flex gap-2">
+            {(['all', 'photography', 'travel', 'meeting'] as const).map(filter => (
+              <button key={filter} onClick={() => setBookingsFilter(filter)}
+                className={cn('px-3 py-1.5 text-sm rounded-lg transition-colors capitalize',
+                  bookingsFilter === filter ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                )}>{filter}</button>
+            ))}
+          </div>
+        </div>
         <div className="space-y-1">
-          {bookings.map(booking => {
+          {filteredBookings.map(booking => {
             const days = daysUntil(booking.date);
             const mapUrl = getMapUrl(booking);
-            const isSouthampton = booking.location && (booking.location.includes('Southampton') || booking.location === 'Above Barbers');
-            const showWeather = booking.type === 'photography' && isSouthampton && weather;
+            const displayLocation = getDisplayLocation(booking);
+            const showWeather = shouldShowWeather(booking);
+            const TypeIcon = typeIcons[booking.type] || CalendarDays;
 
             return (
               <div key={booking.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
@@ -952,25 +1029,38 @@ function BookingsSection() {
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{booking.title}</p>
+                  <div className="flex items-center gap-2">
+                    <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <p className="font-medium truncate">{booking.title}</p>
+                  </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
-                    {booking.time && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {booking.time}</span>}
-                    {booking.location && (
+                    {booking.time && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {booking.time}{booking.endTime ? ` - ${booking.endTime}` : ''}
+                      </span>
+                    )}
+                    {displayLocation && (
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5" />
                         {mapUrl ? (
                           <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-                            {booking.location}
+                            {displayLocation}
                           </a>
                         ) : (
-                          booking.location
+                          displayLocation
                         )}
                       </span>
                     )}
-                    {showWeather && (
+                    {showWeather && weather && (
                       <span className="flex items-center gap-1">
                         <span className="text-base">{getWeatherEmoji(weather.icon)}</span>
                         <span>{weather.temp}°C</span>
+                      </span>
+                    )}
+                    {booking.description && booking.type === 'travel' && (
+                      <span className="text-xs text-muted-foreground truncate max-w-[200px]" title={booking.description}>
+                        {booking.description.split('\n')[0].substring(0, 60)}{booking.description.length > 60 ? '...' : ''}
                       </span>
                     )}
                   </div>
@@ -978,12 +1068,15 @@ function BookingsSection() {
                 <div className="text-right shrink-0">
                   <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', typeColors[booking.type])}>{booking.type}</span>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`}
+                    {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days < 0 ? 'Past' : `${days}d`}
                   </p>
                 </div>
               </div>
             );
           })}
+          {filteredBookings.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">No {bookingsFilter} bookings</p>
+          )}
         </div>
       </Card>
 
@@ -1172,6 +1265,10 @@ export default function Dashboard() {
     setInstagramAccounts(demoInstagramAccounts);
     setStocks(demoStocks);
     setBookings(demoBookings);
+    // Try to fetch live calendar data
+    fetch('/api/bookings').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.live && d.events?.length > 0) setBookings(d.events);
+    }).catch(() => {});
     setWeather({
       temp: 8, feelsLike: 5, description: 'partly cloudy', icon: 'clouds',
       humidity: 72, windSpeed: 14, forecast: [],
