@@ -2513,7 +2513,17 @@ export default function Dashboard() {
   }, [setWeather]);
 
   useEffect(() => {
-    setInvoices(demoInvoices);
+    // Load invoices from Redis (Pixieset scrape) or fall back to demo data
+    fetch('/api/sync?key=pixieset-invoices')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.value && Array.isArray(d.value) && d.value.length > 0) {
+          setInvoices(d.value);
+        } else {
+          setInvoices(demoInvoices);
+        }
+      })
+      .catch(() => setInvoices(demoInvoices));
     setIncomeEntries(demoIncomeEntries);
     setAnalytics(demoAnalytics);
     setInstagramAccounts(demoInstagramAccounts);
