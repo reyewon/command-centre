@@ -33,6 +33,14 @@ const NAV_ITEMS = [
 
 const PIE_COLORS = ['#d97757', '#c15f3c', '#e5956e', '#c9923e', '#5a9a6e', '#8a857a'];
 
+// Mobile-aware email URL: open Gmail app on mobile, specific inbox on desktop
+function getEmailUrl(gmailUrl: string): string {
+  if (typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    return 'googlegmail:///';
+  }
+  return gmailUrl;
+}
+
 // ==================== ANIMATED NUMBER ====================
 
 function useAnimatedNumber(target: number, duration = 1200) {
@@ -242,7 +250,7 @@ function useEnquiryNotifications() {
           });
           // Click notification to open Gmail
           n.onclick = () => {
-            window.open(email.gmailUrl, '_blank');
+            window.open(getEmailUrl(email.gmailUrl), '_blank');
             n.close();
           };
         });
@@ -710,7 +718,7 @@ function EnquiriesGlance() {
           {display.map((email) => (
             <a
               key={email.id}
-              href={email.gmailUrl}
+              href={getEmailUrl(email.gmailUrl)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex gap-3 py-2.5 hover:bg-muted -mx-1 px-1 rounded-lg transition-colors group"
@@ -2407,7 +2415,7 @@ function EnquiriesSection() {
             {emails.map((email) => (
               <a
                 key={email.id}
-                href={email.gmailUrl}
+                href={getEmailUrl(email.gmailUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
