@@ -1566,7 +1566,7 @@ function FinancesSection() {
               ))}
             </div>
           </div>
-          <div className="h-72">
+          <div className="h-72 overflow-hidden">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={filteredIncomeEntries.map(e => ({ month: getMonthName(e.month), Photography: e.photography, Retainer: e.retainer }))}>
                 <defs>
@@ -1588,7 +1588,7 @@ function FinancesSection() {
 
         <Card>
           <h3 className="font-semibold text-lg mb-4">Revenue by Client</h3>
-          <div className="h-48">
+          <div className="h-48 overflow-hidden">
             <ResponsiveContainer width="100%" height="100%">
               <RPieChart>
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={2} dataKey="value">
@@ -2579,7 +2579,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} onNavigate={handleNavigate} />
 
       {/* Mobile header */}
@@ -2666,7 +2666,7 @@ export default function Dashboard() {
 
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        <main className="flex-1 min-h-screen">
+        <main className="flex-1 min-h-screen min-w-0 overflow-x-hidden">
           <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
             {showBanner && (
               <NotificationBanner onEnable={requestPermission} onDismiss={dismissBanner} />
