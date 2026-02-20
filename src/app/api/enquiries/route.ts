@@ -188,7 +188,7 @@ async function fetchEmailsFromAccount(
         // Build Gmail URL
         const gmailUrl = accountLabel === 'personal'
           ? `https://mail.google.com/mail/u/0/#inbox/${msg.id}`
-          : `https://mail.google.com/mail/u/1/#inbox/${msg.id}`;
+          : `https://mail.google.com/mail/u/4/#inbox/${msg.id}`;
 
         emails.push({
           id: msg.id || '',
