@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 const STARLING_TOKEN = process.env.STARLING_ACCESS_TOKEN;
 const TRADING212_API_KEY = process.env.TRADING212_API_KEY;
+const TRADING212_API_SECRET = process.env.TRADING212_API_SECRET;
 
 const KV_REST_API_URL = process.env.KV_REST_API_URL;
 const KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN;
@@ -63,9 +64,14 @@ async function fetchTrading212Summary(): Promise<{
 } | null> {
   if (!TRADING212_API_KEY) return null;
 
+  // Build auth header: Basic auth if secret is provided, otherwise raw key
+  const authHeader = TRADING212_API_SECRET
+    ? `Basic ${Buffer.from(`${TRADING212_API_KEY}:${TRADING212_API_SECRET}`).toString('base64')}`
+    : TRADING212_API_KEY;
+
   try {
     const res = await fetch('https://live.trading212.com/api/v0/equity/account/info', {
-      headers: { Authorization: TRADING212_API_KEY },
+      headers: { Authorization: authHeader },
       cache: 'no-store',
     });
 
@@ -77,7 +83,7 @@ async function fetchTrading212Summary(): Promise<{
 
     // Also try to get the cash balance
     const cashRes = await fetch('https://live.trading212.com/api/v0/equity/account/cash', {
-      headers: { Authorization: TRADING212_API_KEY },
+      headers: { Authorization: authHeader },
       cache: 'no-store',
     });
 
