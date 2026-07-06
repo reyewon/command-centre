@@ -1,6 +1,8 @@
 // All research conducted 6 July 2026. Prices in GBP, checked against retailer
 // pages, idealo and PriceSpy on that date. Real-world figures favour tested
-// data (eRideHero, ebiketips, owner reports) over manufacturer claims.
+// data (eRideHero, TechGearLab, owner reports) over manufacturer claims.
+// Lineup criteria: 11–12″ pneumatic tyres, purchasable in the UK today,
+// commuter-grade for a 90kg rider in a hilly, rainy city.
 
 export const META = {
   researched: '6 July 2026',
@@ -13,94 +15,94 @@ export const SPEC_ROWS = [
   {
     key: 'peakPower', group: 'Performance', label: 'Peak motor power', betterHigh: true,
     explain:
-      'Peak watts is what the motor can briefly deliver when you ask for everything — pulling away, or halfway up a hill. At 90kg you lean on peak power constantly on climbs: it’s the single best predictor of whether a scooter holds speed up a Southampton gradient or wheezes to walking pace.',
+      'Peak watts is what the motor can briefly deliver when you ask for everything — pulling away, or halfway up a hill. At 90kg you lean on peak power constantly on climbs. One caution: budget brands quote these numbers loosely (the KuKirin’s "2,000W" is its only published figure, with no verified nominal/peak split; the isinwheel is sold as 800W, 1000W and 1200W on different pages of the same shop).',
   },
   {
     key: 'nominalPower', group: 'Performance', label: 'Nominal motor power', betterHigh: true,
     explain:
-      'The power the motor can sustain continuously without overheating. UK/EU versions are often de-rated versus US models (the G3 E runs 700W nominal vs the US G3’s 850W). Sustained climbs at rider weights near the max load are where nominal power matters more than peak.',
+      'The power the motor can sustain continuously without overheating. Sustained climbs at rider weights near the max load are where nominal power matters more than peak — and where marketing figures and physics part company.',
   },
   {
     key: 'batteryWh', group: 'Performance', label: 'Battery capacity', betterHigh: true,
     explain:
-      'Watt-hours are the fuel tank. As a rule of thumb a 90kg rider on mixed terrain uses roughly 15–20Wh per mile at 15.5mph — so 597Wh is a realistic ~25–35 miles, 468Wh is ~20–28, and 342Wh is ~12–17. Bigger batteries also age slower for the same mileage because each cell works less hard per trip.',
+      'Watt-hours are the fuel tank. A 90kg rider on mixed terrain uses roughly 15–20Wh per mile at 15.5mph — so 597Wh is a realistic ~25–35 miles and 1,200Wh could double that. But cell quality matters as much as size: Segway and Xiaomi use branded cells with battery-management pedigree; KuKirin doesn’t publish who makes its cells.',
   },
   {
     key: 'rangeClaimed', group: 'Performance', label: 'Claimed range', betterHigh: true,
     explain:
-      'Manufacturer figures come from a light rider at ~15km/h on a flat, windless test loop. Treat them as a marketing ceiling — every scooter here delivers roughly half its claim in real UK commuting. Useful only for comparing scooters against each other on equal terms.',
+      'Manufacturer figures come from a light rider at ~15km/h on a flat, windless test loop. Treat them as a marketing ceiling — every scooter here delivers roughly half to two-thirds of its claim in real UK commuting. Useful only for comparing scooters against each other on equal terms.',
   },
   {
     key: 'rangeReal', group: 'Performance', label: 'Real-world range (est. @90kg)', betterHigh: true,
     explain:
-      'Our estimate for you specifically: ~90kg rider, mixed Southampton terrain with hills, normal riding mode, mild weather. Sources: eRideHero instrumented tests, ebiketips hilly-course tests and heavier-rider owner reports. Knock another 20–30% off in winter — lithium cells hate the cold.',
+      'Our estimate for you specifically: ~90kg rider, mixed Southampton terrain with hills, normal riding, mild weather. Sources: eRideHero and TechGearLab instrumented tests, Ebike Escape ride data and heavier-rider owner reports. Knock another 20–30% off in winter — lithium cells hate the cold.',
   },
   {
     key: 'topSpeed', group: 'Performance', label: 'Top speed', betterHigh: true,
     explain:
-      'All four are software-capped at 25km/h (15.5mph) for the UK/EU market, so speed doesn’t separate them. What separates them is whether they can hold 25km/h up a hill with 90kg aboard — that’s the peak-power and torque story above.',
+      'The Segway and Xiaomi ship software-capped at 25km/h (15.5mph) for the UK/EU. The isinwheel and KuKirin ship unrestricted (28mph and ~40mph respectively) with selectable modes — academic for legality (private e-scooters are private-land-only in the UK either way), but relevant to insurance, safety and how hard the brakes have to work.',
   },
   {
     key: 'hillGrade', group: 'Performance', label: 'Max claimed gradient', betterHigh: true,
     explain:
-      'The steepest slope the maker says it can climb — usually measured with a light rider, so treat it as relative rather than absolute. For context: a typical steep UK residential street is 10–15%; 20%+ is properly steep. At 90kg, subtract several points from every claim.',
+      'The steepest slope the maker says it can climb — usually with a light rider, so treat it as relative. For context: a steep UK residential street is 10–15%. The isinwheel’s "35°" claim is physically absurd (that’s a 70% grade) — independent testing found an 82kg rider topping out around 15%. At 90kg, subtract several points from every claim here.',
   },
   {
     key: 'chargeTime', group: 'Performance', label: 'Charge time (hours)', betterHigh: false,
     explain:
-      'Full 0–100% on the supplied charger. If the scooter is your only transport, slow charging is a genuine lifestyle constraint — a 9–10 hour charge means overnight, every night. The G3 E supports a second charger for ~2.5h; the Xiaomis take an optional Fast Charger 2 (~2h45 on the Max).',
+      'Full 0–100% on the supplied charger. If the scooter is your only transport, slow charging is a lifestyle constraint. The G3 E charges in 3.5h (2.5h with a second charger); the Xiaomi takes an optional Fast Charger 2 (2¾h); the KuKirin’s 1,200Wh on a 2A brick means 10–12 hours, every time, with no fast option.',
   },
   // Practical
   {
     key: 'weight', group: 'Practicality', label: 'Weight (kg)', betterHigh: false,
     explain:
-      'You don’t drive, so this is the "dead scooter / train / stairs / hallway" number. 16kg is liftable one-handed for short bursts. 24kg+ is a two-hand grunt. Nearly 30kg is effectively wheel-it-or-leave-it — fine if it lives in a hallway, brutal if your flat is up stairs.',
+      'You don’t drive, so this is the "dead scooter / train / stairs / hallway" number. 24–26kg is a two-hand grunt. Nearly 30kg is wheel-it-or-leave-it. The KuKirin at ~37–41kg is furniture — and even its own official pages can’t agree which of those numbers is right.',
   },
   {
     key: 'maxLoad', group: 'Practicality', label: 'Max rider load (kg)', betterHigh: true,
     explain:
-      'You + clothing + camera bag. At 90kg plus a few kilos of photography gear you want generous headroom — motors, brakes and range all degrade as you approach the limit. 120kg gives you ~25kg of margin; 130–140kg means the scooter barely notices your kit.',
+      'You + clothing + camera bag. At 90kg plus a few kilos of gear you want generous headroom — motors, brakes and range all degrade as you approach the limit. 120kg gives you ~25kg of margin; 130–150kg means the scooter barely notices your kit.',
   },
   {
     key: 'ipRating', group: 'Practicality', label: 'Water resistance', num: false,
     explain:
-      'IPX5 = low-pressure water jets (light rain, spray). IPX6 = heavy jets (proper rain, puddle spray). IP65 adds full dust-tightness. IPX7 (the G3 E’s battery) survives temporary immersion. For year-round Southampton commuting anything below IPX5 is a gamble; IPX6+ is where you stop thinking about the forecast. One caveat: several brands have refused water-damage warranty claims regardless of rating, so store it dry.',
+      'IPX4 = splashes only. IPX5/6 = water jets (real rain). IPX7 (the G3 E’s battery) survives temporary immersion. Read the small print: the isinwheel’s headline "IP65" applies to the battery pack only — the scooter itself is IPX4–5 — and KuKirin’s warranty explicitly excludes all moisture damage, with their own blog telling you not to ride in heavy rain. For year-round Southampton commuting this row matters more than any other.',
   },
   {
     key: 'folded', group: 'Practicality', label: 'Folded size', num: false,
     explain:
-      'How much hallway, boot or train luggage-rack it eats. The Flex is the outlier — it folds in half like a Brompton to cabin-bag size and can be rolled while folded. The other three fold flat-stem-to-deck and stay long: over 1.2m of scooter to park.',
+      'How much hallway, boot or train luggage-rack it eats. All four fold flat-stem-to-deck and stay long — 1.2m+ of scooter to park. None of this lineup is a carry-aboard folder; they live in hallways and sheds.',
   },
   {
     key: 'warranty', group: 'Practicality', label: 'Warranty & UK support', num: false,
     explain:
-      'Length is only half the story — who honours it matters more. Buying from a big UK retailer (Currys, Halfords, Argos) adds Consumer Rights Act leverage: your contract is with the shop, not an overseas support inbox. Both Segway’s and Pure’s direct support draw mixed-to-poor Trustpilot reviews; Xiaomi repairs are handled in the UK by their partner SBE with a decent reputation.',
+      'Length is only half the story — who honours it matters more. Segway and Xiaomi give 2 years with established UK repair routes (buy the Segway via Currys for Consumer Rights Act leverage; Xiaomi repairs are done in the UK by SBE). The budget brands give 1 year — and isinwheel only covers battery/motor/controller for 6 months, while KuKirin excludes water damage entirely and expects you to fit replacement parts yourself.',
   },
   // Equipment
   {
     key: 'tyres', group: 'Equipment', label: 'Tyres', num: false,
     explain:
-      'Bigger pneumatic tyres roll over potholes and grip better in the wet. Tubeless means no inner tube to pinch-puncture; the G3 E adds self-sealing gel that plugs small punctures as you ride — a big deal when the scooter is your only way home. Solid tyres (none here, thankfully) are the wet-grip villain.',
+      'Your 11–12″ requirement, met four ways. Bigger pneumatic tyres roll over potholes and grip better in the wet. Tubeless means no inner tube to pinch-puncture; the G3 E adds self-sealing gel that plugs small punctures as you ride. Note the isinwheel is the only tubed tyre here — punctures mean removing the wheel and levering out an inner tube whose valve owners describe as awkward to reach.',
   },
   {
     key: 'brakes', group: 'Equipment', label: 'Brakes', num: false,
     explain:
-      'Discs bite hardest but are exposed to grit and need periodic adjustment — one long-term G3 owner had seized calipers at 2,000km. Enclosed drums (Pure’s front) are weaker on paper but shrug off winter grime, which suits a rain commuter. Every scooter here adds regenerative electronic braking on top.',
+      'Discs bite hardest but are exposed to grit and need periodic adjustment. None of these four has hydraulic brakes — all are cable-actuated. That matters most on the KuKirin, whose ~40mph unrestricted capability sits on the same mechanical discs reviewers call marginal above 30mph. Every scooter here adds regenerative electronic braking on top.',
   },
   {
     key: 'suspension', group: 'Equipment', label: 'Suspension', num: false,
     explain:
-      'Suspension is comfort and control — on wet, broken tarmac it keeps the tyres planted instead of skipping. The G3 E has genuinely adjustable front hydraulic + rear dual shocks; the Xiaomis use spring setups with ~45mm travel; the Flex has none and relies on its 10-inch tubeless tyres and wide stance.',
+      'Suspension is comfort and control — on wet, broken tarmac it keeps the tyres planted instead of skipping. The G3 E has genuinely adjustable front hydraulic + rear dual shocks; the Xiaomi uses a 45mm spring setup; the two budget scooters use undamped coil springs — the isinwheel’s reviewed as stiff and under-damped, the KuKirin’s as decent but bouncy.',
   },
   {
     key: 'lights', group: 'Equipment', label: 'Lights & indicators', num: false,
     explain:
-      'All four have indicators — rarer than you’d think and genuinely useful when you can’t safely take a hand off the bar to signal. Headlight quality varies: the Flex’s 150-lumen unit plus footrest tail lights is the most visible package; the G3 E’s auto-on 6W headlight is the brightest single lamp.',
+      'All four have indicators — rarer than you’d think and genuinely useful when you can’t safely take a hand off the bar to signal. The G3 E’s auto-on 6W headlight is the brightest single lamp; the isinwheel adds ambient deck lighting, which is more about looks than being seen.',
   },
   {
     key: 'extras', group: 'Equipment', label: 'Smart features', num: false,
     explain:
-      'Apple Find My matters if the scooter is your primary transport — it turns "stolen" into "trackable". Traction control (TCS) is a real wet-weather feature, cutting power when the driven wheel slips on paint lines and manhole covers. All four pair to an app for lock, firmware and ride stats.',
+      'Apple Find My matters if the scooter is your primary transport — it turns "stolen" into "trackable". Only the Segway and Xiaomi have it; they also add traction control (a real wet-weather feature that cuts power when the driven wheel slips on paint lines and manhole covers). The isinwheel has an app with NFC unlock; the KuKirin has no consumer app at all — just a touchscreen dashboard reviewers call unresponsive.',
   },
 ]
 
@@ -111,25 +113,25 @@ const g3e = {
   shortName: 'Ninebot Max G3 E',
   color: '#3987e5',
   colorSoft: 'rgba(57, 135, 229, 0.14)',
-  tagline: 'The complete commuter — biggest battery, most power, full suspension.',
-  headline: { range: '~22 mi', weight: '24.6 kg', price: '£819' },
+  tagline: 'The complete commuter — 11″ self-sealing tyres, most power, full suspension.',
+  headline: { range: '~25 mi', weight: '24.6 kg', price: '£819' },
   images: [
     { src: '/images/ninebot-max-g3e-1.png', alt: 'Segway Ninebot Max G3 E — front three-quarter studio view' },
     { src: '/images/ninebot-max-g3e-2.png', alt: 'Segway Ninebot Max G3 E — rear view showing dual shocks' },
     { src: '/images/ninebot-max-g3e-3.jpg', alt: 'Two riders on Segway Ninebot Max G3 E scooters' },
   ],
   specs: {
-    peakPower: { display: '2,000 W', num: 2000, note: 'De-rated to 700W nominal for the UK/EU, but the full 2,000W peak remains — it out-punches everything here by a wide margin.' },
+    peakPower: { display: '2,000 W', num: 2000, note: 'De-rated to 700W nominal for the UK/EU, but the full 2,000W peak remains — and unlike the budget brands, Segway’s figures are independently verified.' },
     nominalPower: { display: '700 W', num: 700, note: 'US G3 runs 850W nominal; the E version trades a little sustained power for EU compliance.' },
-    batteryWh: { display: '597 Wh', num: 597, note: 'Biggest tank in the group, and it supports a second charger for ~2.5h full charges.' },
+    batteryWh: { display: '597 Wh', num: 597, note: 'Supports a second charger for ~2.5h full charges. Branded cells, proven BMS.' },
     rangeClaimed: { display: '50 mi / 80 km', num: 50 },
     rangeReal: { display: '~22–28 mi', num: 25, note: 'eRideHero measured 24.9 mi regular / 28.7 mi eco at 79kg on the faster US version; a 90kg+ Reddit owner reports 22–25 mi round trips "with battery to spare". The UK 15.5mph cap helps efficiency.' },
-    topSpeed: { display: '15.5 mph', num: 15.5 },
-    hillGrade: { display: '30%', num: 30, note: 'EU spec sheet claims 30%; the US sheet says 23%. Either way it’s the strongest climber here — ESG found it holds speed on steep inclines far better than the old G2.' },
+    topSpeed: { display: '15.5 mph (capped)', num: 15.5 },
+    hillGrade: { display: '30%', num: 30, note: 'EU spec sheet claims 30%; the US sheet says 23%. Either way it’s the strongest climber here — ESG found it holds speed on steep inclines far better than the old G2, including with 100kg+ riders.' },
     chargeTime: { display: '3.5 h (2.5 h dual)', num: 3.5 },
     weight: { display: '24.6 kg', num: 24.6 },
     maxLoad: { display: '130 kg', num: 130 },
-    ipRating: { display: 'IPX6 + IPX7 battery', note: 'Best water-protection combo in the group — the battery itself survives temporary immersion.' },
+    ipRating: { display: 'IPX6 + IPX7 battery', note: 'Best water-protection combo in the group — the battery itself survives temporary immersion. TCS traction control on top.' },
     folded: { display: '122 × 59 × 59 cm', note: 'Folds flat but stays 1.2m long — it parks rather than packs.' },
     warranty: { display: '2 yr (buy via Currys)', note: 'Segway direct support reviews are poor (warranty denials for "wet road" use reported) — buying from Currys puts the Consumer Rights Act between you and that inbox.' },
     tyres: { display: '11″ tubeless, self-sealing', note: 'Self-healing gel plugs small punctures on the move — the best "only way home" insurance here.' },
@@ -145,7 +147,7 @@ const g3e = {
       { name: 'Currys', price: 819, url: 'https://www.currys.co.uk/products/segwayninebot-max-g3-e-electric-folding-scooter-black-10287596.html', note: 'In stock; ~5-day delivery. Only retailer on idealo.' },
       { name: 'Segway UK direct', price: 809, url: 'https://uk-en.segway.com/products/max-g3-e', note: 'Listed ~£809 at launch; JS-hidden price — verify at checkout.' },
       { name: 'Ride + Glide', price: null, url: 'https://www.rideandglide.co.uk/product/ninebot-by-segway-max-g3-electric-scooter/', note: 'Specialist stockist, free UK delivery; price on request.' },
-      { name: 'Halfords / Argos / Pure', price: null, url: null, note: 'Not stocked — Halfords only carries the older Max G30.' },
+      { name: 'Halfords / Argos / Amazon', price: null, url: null, note: 'Not stocked — Halfords only carries the older Max G30.' },
     ],
     deals: [
       { label: 'TopCashback: 10.5% on Currys "selected e-scooters"', verified: true, detail: 'Category verified live 6 Jul 2026; ~£71 back on £819 (paid on ex-VAT price). Model inclusion confirmed at click-through.' },
@@ -180,8 +182,8 @@ const g3e = {
   },
   pros: [
     { title: 'Holds 15.5mph up almost any hill', detail: '2,000W peak means Southampton gradients simply don’t register at 90kg.', strength: 3 },
-    { title: 'Biggest battery + fastest charging', detail: '597Wh and 3.5h charges (2.5h with a second charger) — real ~22mi at your weight.', strength: 3 },
-    { title: 'Best wet-weather engineering', detail: 'IPX6 body, IPX7 battery, TCS traction control, self-sealing tubeless tyres.', strength: 3 },
+    { title: 'Biggest verified battery + fastest charging', detail: '597Wh of branded cells and 3.5h charges (2.5h dual) — real ~25mi at your weight.', strength: 3 },
+    { title: 'Best wet-weather engineering', detail: 'IPX6 body, IPX7 battery, TCS traction control, self-sealing 11″ tubeless tyres.', strength: 3 },
     { title: 'Adjustable full suspension', detail: 'Front hydraulic fork + rear dual shocks — the reference ride in this class.', strength: 2 },
   ],
   cons: [
@@ -192,10 +194,10 @@ const g3e = {
   ],
   verdict: {
     rank: 1,
-    headline: 'The winner — buy this one.',
+    headline: 'Still the winner — nothing in the 11–12″ field touches it.',
     text: [
-      'This is the scooter your use case describes. You’re 90kg, you don’t drive, your city has hills and it rains half the year: the G3 E is the only contender that treats all four of those as solved problems rather than compromises. The 2,000W peak motor means hills genuinely disappear; the 597Wh battery gives you honest 20+ mile days with margin for winter; IPX6 plus an IPX7-sealed battery and traction control make wet tarmac routine; and the self-sealing tyres mean a shard of glass doesn’t strand you and your camera gear across town.',
-      'Its flaws are real but livable: it’s heavy (you’re parking it, not carrying it), the discs want a seasonal once-over, and Segway’s direct support is the weakest link — so buy it from Currys, stack the 10.5% TopCashback (~£747 effective) and let the Consumer Rights Act do the warranty heavy-lifting. Reddit’s most-recommended scooter, eRideHero’s best-riding commuter, and the right tool for your exact job.',
+      'Re-running this comparison against genuinely alternative brands only sharpened the conclusion. You’re 90kg, you don’t drive, your city has hills and it rains half the year: the G3 E is the only contender that treats all four of those as solved problems. The 2,000W peak motor makes hills disappear; the 597Wh battery gives honest 20+ mile days with winter margin; IPX6 plus an IPX7-sealed battery and traction control make wet tarmac routine; and the self-sealing 11″ tyres mean a shard of glass doesn’t strand you and your camera gear across town.',
+      'What the budget challengers exposed is what you’re actually paying for: verified specs instead of marketing fiction, branded battery cells, a 2-year warranty honoured through Currys, and an owner base big enough that every fault has a known fix. Its flaws are unchanged — it’s heavy, the discs want a seasonal once-over, and Segway direct support is the weak link (so buy from Currys and stack the 10.5% TopCashback, ~£747 effective). Reddit’s most-recommended scooter, eRideHero’s best-riding commuter, and the right tool for your exact job.',
     ],
   },
 }
@@ -207,7 +209,7 @@ const xiaomi6max = {
   shortName: 'Xiaomi 6 Max',
   color: '#c98500',
   colorSoft: 'rgba(201, 133, 0, 0.14)',
-  tagline: 'The value play — 12-inch wheels and IPX6 for under £600.',
+  tagline: 'The value play — the only 12-inch wheels in the field, IPX6, under £600.',
   headline: { range: '~28 mi', weight: '29.7 kg', price: '£599' },
   images: [
     { src: '/images/xiaomi-6-max-1.png', alt: 'Xiaomi Electric Scooter 6 Max — official studio render' },
@@ -217,10 +219,10 @@ const xiaomi6max = {
   specs: {
     peakPower: { display: '1,100 W', num: 1100, note: '45Nm of torque — strong for the class, though barely half the G3 E’s peak.' },
     nominalPower: { display: '450 W', num: 450 },
-    batteryWh: { display: '468 Wh', num: 468, note: 'Slightly smaller than the old 5 Max’s 477Wh, but much more efficient (6.7 vs 8.0 Wh/km claimed).' },
+    batteryWh: { display: '468 Wh', num: 468, note: 'Smallest tank here on paper — but class-leading efficiency (6.7Wh/km claimed) means it outranges its size.' },
     rangeClaimed: { display: '43.5 mi / 70 km', num: 43.5, note: 'Drops to a claimed 28mi if you sit at top speed the whole way.' },
-    rangeReal: { display: '~25–31 mi', num: 28, note: 'ScooterRank found 34–37mi mixed urban at average weight; at 90kg with hills, budget ~25–31mi — still the group’s best real range per pound.' },
-    topSpeed: { display: '15.5 mph', num: 15.5 },
+    rangeReal: { display: '~25–31 mi', num: 28, note: 'ScooterRank found 34–37mi mixed urban at average weight; at 90kg with hills, budget ~25–31mi — the best real range per pound here.' },
+    topSpeed: { display: '15.5 mph (capped)', num: 15.5 },
     hillGrade: { display: '24%', num: 24, note: 'Validated under load per Xiaomi; expect it to slow but not stall on steep stuff at 90kg. Sustained long climbs can trigger thermal protection.' },
     chargeTime: { display: '9 h (2¾ h fast)', num: 9, note: 'Standard charger is painfully slow — but the Fast Charger 2 (free launch gift while stocks last) cuts it to 2h45.' },
     weight: { display: '29.7 kg', num: 29.7 },
@@ -228,7 +230,7 @@ const xiaomi6max = {
     ipRating: { display: 'IPX6 whole scooter' },
     folded: { display: '130 × 61 × 66 cm', note: 'The longest fold here — those 12-inch wheels have to go somewhere.' },
     warranty: { display: '2 yr, UK repairs by SBE', note: 'Mail-in with prepaid label; UK parts stock and quick turnarounds reported. The most reassuring after-sales story of the four.' },
-    tyres: { display: '12″ tubeless', note: 'Biggest wheels in the group — +13% contact patch and claimed +40% wet grip vs the 5 Max. Rolls over potholes the others feel.' },
+    tyres: { display: '12″ tubeless', note: 'The only 12-inch wheels in the field — +13% contact patch and claimed +40% wet grip vs the 5 Max. Rolls over potholes the others feel.' },
     brakes: { display: 'Dual discs + rear E-ABS' },
     suspension: { display: 'Front fork + dual rear springs, 45mm' },
     lights: { display: 'Headlight, brake light, indicators' },
@@ -253,10 +255,10 @@ const xiaomi6max = {
   },
   reviews: {
     outlets: [
-      { name: 'T3 (hands-on)', score: 'Positive', quote: 'The pick for a subtler design while only losing a little power to the Ultra.', url: 'https://www.t3.com/active/electric-scooters/i-rode-the-xiaomi-scooter-6-ultra-and-it-gives-segway-and-apollo-a-run-for-their-money' },
+      { name: 'T3 (hands-on)', score: 'Positive', quote: 'The pick for a subtler design while only losing a little power to the flagship Ultra.', url: 'https://www.t3.com/active/electric-scooters/i-rode-the-xiaomi-scooter-6-ultra-and-it-gives-segway-and-apollo-a-run-for-their-money' },
       { name: 'ScooterRank', score: '57/100', quote: 'Above-average motor, range and IPX6 — but 29.7kg vs a 23.9kg category average.', url: 'https://scooterrank.com/scooters/xiaomi-electric-scooter-6-max' },
     ],
-    youtube: 'Almost all coverage went to the 6 Ultra (very positive on ride and value). The Max itself has near-zero dedicated video coverage — it launched in Feb 2026 and reviewers skipped past it.',
+    youtube: 'Almost all coverage went to the flagship 6 Ultra (very positive on ride and value). The Max itself has near-zero dedicated video coverage — it launched in Feb 2026 and reviewers skipped past it.',
     reddit: 'No meaningful owner threads yet — the model is ~4 months old in the UK. Treat community sentiment as unknown; Xiaomi’s wider scooter history includes stem-wobble complaints on the 4-series that the 6’s reinforced carbon-steel frame appears designed to answer.',
     sentiment: {
       positive: [
@@ -266,7 +268,7 @@ const xiaomi6max = {
         { theme: 'UK repair network (SBE)', weight: 3 },
       ],
       negative: [
-        { theme: '29.7kg — heaviest here', weight: 5 },
+        { theme: '29.7kg — heavy', weight: 5 },
         { theme: '9h standard charge', weight: 4 },
         { theme: 'No track record yet', weight: 3 },
         { theme: 'Won’t charge below 8°C', weight: 2 },
@@ -274,222 +276,220 @@ const xiaomi6max = {
     },
   },
   pros: [
-    { title: 'Best real range for the money', detail: '~25–31mi at your weight for under £600 — unbeatable £/mile here.', strength: 3 },
-    { title: '12-inch tubeless tyres', detail: 'Biggest contact patch of the four; +40% claimed wet grip. Confidence on greasy tarmac.', strength: 3 },
+    { title: 'The only true 12-inch wheels here', detail: 'Biggest contact patch of the four; +40% claimed wet grip. Confidence on greasy tarmac.', strength: 3 },
+    { title: 'Best real range for the money', detail: '~25–31mi at your weight for under £600 — unbeatable £/mile in this field.', strength: 3 },
     { title: 'Free Fast Charger 2 at launch', detail: 'Turns its worst spec (9h charging) into 2¾h — grab it while the gift lasts.', strength: 2 },
     { title: 'Solid UK warranty path', detail: '2 years, repairs done in the UK by SBE with prepaid shipping.', strength: 2 },
   ],
   cons: [
-    { title: '29.7kg — properly heavy', detail: 'Heaviest of the four. This is furniture that moves, not luggage.', strength: 3 },
+    { title: '29.7kg — properly heavy', detail: 'This is furniture that moves, not luggage.', strength: 3 },
     { title: 'Thermal throttling on long climbs', detail: 'Motor protection can sap power on sustained gradients — relevant to your hills.', strength: 2 },
     { title: 'Zero review/owner track record', detail: 'Launched Feb 2026; no long-term reliability data exists yet.', strength: 2 },
     { title: 'Cold-charging cutoff', detail: 'Refuses to charge below 8°C — a real constraint for unheated storage in winter.', strength: 1 },
   ],
   verdict: {
-    rank: 3,
-    headline: 'The value pick — most scooter per pound.',
+    rank: 2,
+    headline: 'The runner-up — and the only 12-incher worth buying.',
     text: [
-      'If the budget conversation wins, buy this and don’t look back. £599 with a free fast charger gets you the biggest wheels, excellent real-world range, IPX6, traction control, Find My and a genuinely good UK repair setup. The catches: a 1,100W peak motor that will feel your steeper climbs at 90kg where the G3 E and 6 Ultra wouldn’t, a 468Wh battery that its own £120-dearer sibling beats by 25%, and the simple fact that nobody — professional or Reddit — has lived with one long enough to vouch for it yet.',
+      'If the budget conversation wins, buy this and don’t look back. £599 with a free fast charger gets you the only 12-inch wheels in the UK’s sub-£900 market worth having, excellent real-world range, IPX6, traction control, Find My and a genuinely good UK repair setup. The catches: a 1,100W peak motor that will feel your steeper climbs at 90kg where the G3 E wouldn’t, nearly 30kg of kerb weight, and the simple fact that nobody — professional or Reddit — has lived with one long enough to vouch for it yet. Against the budget brands below, though, its spec sheet is honest and its warranty is real — that’s worth a lot when the machine is your only transport.',
     ],
   },
 }
 
-const xiaomi6ultra = {
-  id: 'x6ultra',
-  brand: 'Xiaomi',
-  name: 'Xiaomi Electric Scooter 6 Ultra',
-  shortName: 'Xiaomi 6 Ultra',
+const gt2 = {
+  id: 'gt2',
+  brand: 'isinwheel',
+  name: 'isinwheel GT2',
+  shortName: 'isinwheel GT2',
   color: '#199e70',
   colorSoft: 'rgba(25, 158, 112, 0.14)',
-  tagline: 'The flagship tank — biggest range here, plushest suspension, most weight.',
-  headline: { range: '~31 mi', weight: '33.7 kg', price: '£719' },
+  tagline: 'The budget 11-incher — a lot of scooter for £539, if you get a good one.',
+  headline: { range: '~22 mi', weight: '~25 kg', price: '£539' },
   images: [
-    { src: '/images/xiaomi-6-ultra-1.png', alt: 'Xiaomi Electric Scooter 6 Ultra — official studio render in yellow' },
-    { src: '/images/xiaomi-6-ultra-2.jpg', alt: 'Xiaomi Electric Scooter 6 Ultra — rear three-quarter action render' },
-    { src: '/images/xiaomi-6-ultra-3.jpg', alt: 'Xiaomi Electric Scooter 6 Ultra rear suspension on gravel' },
+    { src: '/images/isinwheel-gt2-1.jpg', alt: 'isinwheel GT2 — front three-quarter studio view with red front forks' },
+    { src: '/images/isinwheel-gt2-2.jpg', alt: 'isinwheel GT2 — side profile showing suspension and off-road tread' },
+    { src: '/images/isinwheel-gt2-3.jpg', alt: 'isinwheel GT2 parked in a field' },
   ],
   specs: {
-    peakPower: { display: '1,200 W', num: 1200, note: '45Nm torque plus an exclusive Boost mode (+200W burst) — official 8–24km/h in 2.4s.' },
-    nominalPower: { display: '500 W', num: 500 },
-    batteryWh: { display: '585 Wh', num: 585, note: '25% more than the 6 Max and within 2% of the Segway. Non-removable.' },
-    rangeClaimed: { display: '46.6 mi / 75 km', num: 46.6, note: 'Claims 55km (34mi) even at constant full speed — the strongest at-speed claim here.' },
-    rangeReal: { display: '~28–34 mi', num: 31, note: 'ScooterRank estimates 60–65km real at steady 18–20km/h; 55–60km in cold. At 90kg with hills, ~28–34mi — the group’s longest legs.' },
-    topSpeed: { display: '15.5 mph', num: 15.5 },
-    hillGrade: { display: '25%', num: 25, note: 'Best in the 6 series; 140kg max load means 90kg leaves huge headroom. "Handles steep grades without drama" — gadreview.' },
-    chargeTime: { display: '10.5 h (3⅓ h fast)', num: 10.5, note: 'The bundled 70W charger is glacial for 585Wh — the free Fast Charger 2 launch gift is effectively mandatory.' },
-    weight: { display: '33.7 kg', num: 33.7 },
-    maxLoad: { display: '140 kg', num: 140 },
-    ipRating: { display: 'IPX6' },
-    folded: { display: 'Long fold (dims unpublished)', note: 'Xiaomi hasn’t published dimensions in extractable form; it’s larger than the 6 Max’s 130cm-long fold.' },
-    warranty: { display: '2 yr, UK repairs by SBE' },
-    tyres: { display: '12″ all-terrain tubeless' },
-    brakes: { display: 'Dual discs + E-ABS' },
-    suspension: { display: 'Dual swing-arm, front & rear', note: 'Proper double-swing-arm elastomer setup — T3: "a lot of give"; the plushest-riding Xiaomi.' },
-    lights: { display: 'Headlight, brake light, indicators' },
-    extras: { display: 'Find My, TCS, Boost, 3″ TFT', note: 'Apple Find My, traction control, GPS via app, keypad lock, widened 195mm deck with kicktail.' },
+    peakPower: { display: '1,200 W (claimed)', num: 1200, note: 'Sold as "800W", "1000W" and "1200W" on different isinwheel pages — multiple hardware batches ship under one name. No torque figure published; no independent verification.' },
+    nominalPower: { display: '800 W', num: 800, note: 'The 2026 "upgraded" listing claims 1000W rated. Confirm which batch you’re getting before ordering.' },
+    batteryWh: { display: '720 Wh', num: 720, note: '48V 15Ah, removable. Cell brand unpublished; 6-month warranty on the battery tells its own story.' },
+    rangeClaimed: { display: '31–37 mi / 50–60 km', num: 34, note: 'A cheaper "Weekly Deal" listing of the same scooter claims only 45km — more batch chaos.' },
+    rangeReal: { display: '~20–24 mi', num: 22, note: 'Battery-capacity analysis puts real commuting range at 20–24mi; ~32mi is achievable at eco pace for an 82kg rider.' },
+    topSpeed: { display: '28 mph unrestricted', num: 28, note: 'TechGearLab tested 26.3mph. Has a 15.5mph limited mode; ships unlocked-capable.' },
+    hillGrade: { display: '"35°" (≈15% real)', num: 15, note: 'The 35° claim is physically absurd (that’s a 70% grade). Independent testing: an 82kg rider maxed out around 15% — expect a little less at 90kg.' },
+    chargeTime: { display: '7–9 h', num: 8, note: '2A charger on a 720Wh pack. Official pages disagree (5–7h vs 7–9h); the physics says 7½h+.' },
+    weight: { display: '~24–26 kg', num: 25, note: 'Listed as both 22.5kg and 25.8kg on isinwheel’s own pages.' },
+    maxLoad: { display: '150 kg', num: 150, note: 'Joint-biggest load rating here — genuine headroom for you plus camera kit.' },
+    ipRating: { display: 'IPX4–5 (battery IP65)', note: 'The headline "IP65" is the battery pack only. Whole-scooter rating is IPX4 (spec sheet) or IPX5 (FAQ) — splash-resistant, not rain-proof. isinwheel’s own FAQ: "we do not recommend the scooter be wet outdoors for a long time".' },
+    folded: { display: '122 × 22 × 57 cm', note: 'Slim when folded but still 1.22m long.' },
+    warranty: { display: '1 yr frame / 6 mo electrics', note: 'Battery, motor, controller and charger are classed "consumable" — 6 months only. No free replacement policy; repairs-first, often self-fit parts. Trustpilot 3.6/5 with return-battle stories.' },
+    tyres: { display: '11″ pneumatic off-road, tubed', note: 'The only tubed tyres here — punctures mean levering out an inner tube, and owners report the valve is awkward to reach.' },
+    brakes: { display: 'Disc + E-ABS regen', note: 'Official pages disagree on one disc or two. Reviewers: mechanical, adequate, and needing "significant adjustment out of the box".' },
+    suspension: { display: '4 coil springs (undamped)', note: 'Reviewed as stiff and under-damped — "doesn’t handle bumps very well" at speed.' },
+    lights: { display: 'Front/rear, deck ambient, indicators' },
+    extras: { display: 'App + NFC unlock (2026 batch)', note: 'No Find My, no traction control. Thumb throttle criticised for hand cramp; cruise control implementation called "dangerous" by one reviewer.' },
   },
-  scores: { range: 9, hills: 8, rain: 8, ride: 8, portability: 1, value: 8 },
+  scores: { range: 7, hills: 5, rain: 5, ride: 6, portability: 3, value: 8 },
   price: {
     rrp: 799,
     retailers: [
-      { name: 'Xiaomi UK (mi.com)', price: 719.99, url: 'https://www.mi.com/uk/product/xiaomi-electric-scooter-6-ultra/', note: 'In stock (yellow flagship colour); shipping since 30 March 2026.' },
-      { name: 'idealo / PriceSpy tracked', price: 719.99, url: 'https://pricespy.co.uk/product.php?p=16245093', note: 'Single-channel pricing — mi.com is the only UK seller tracked.' },
-      { name: 'Currys / Argos / Halfords', price: null, url: null, note: 'Not stocked — the 6 series is mi.com-only in the UK so far.' },
+      { name: 'isinwheel.co.uk', price: 539, url: 'https://www.isinwheel.co.uk/products/isinwheel-gt2-800w-off-road-electric-scooter', note: 'In stock, includes "waterproof" bag. RRP £799 is a soft anchor.' },
+      { name: 'isinwheel "Weekly Deal"', price: 499, url: 'https://www.isinwheel.co.uk/products/gt2-800w-off-road-electric-scooter-isinwheel', note: 'Same name, quotes older 800W/45km spec — possibly old-batch stock. Ask before buying.' },
+      { name: 'Gleeride UK', price: 549, url: 'https://uk.gleeride.com/products/isinwheel-gt2-11-folding-off-road-electric-scooter-800w-motor-48v-15ah-battery', note: 'Currently backordered.' },
+      { name: 'Amazon UK', price: null, url: 'https://www.amazon.co.uk/isinwheel-Electric-GT2-Scooters-Scooter/dp/B0CQ4MB6NV', note: 'Listing exists but rated just 2.6/5 (4 reviews); price unverified.' },
     ],
     deals: [
-      { label: 'Free Xiaomi Fast Charger 2 (worth ~£50–99)', verified: true, detail: 'Live on the 6-series event page, covers the Ultra — cuts charging from 10.5h to 3h20. First come, first served.' },
-      { label: '£50-off 6 Ultra promo', verified: false, detail: 'Seen in Xiaomi 2026 promotion event copy — check the buy page before ordering.' },
-      { label: 'New-user coupon: £5 off', verified: true, detail: 'mi.com/uk first-order AIOT coupon.' },
-      { label: 'TopCashback: 2% on mi.com', verified: true, detail: '~£12 back on £719.99 (ex-VAT basis). Won’t stack with coupons.' },
+      { label: 'TopCashback: 3.15% on isinwheel', verified: true, detail: '~£15 back on £499 (ex-VAT basis). Quidco also lists isinwheel. Voided if you stack an unlisted code.' },
+      { label: 'Newsletter: £10–20 off first order', verified: false, detail: 'Sources conflict on the amount; likely can’t combine with sale prices.' },
+      { label: 'Code BACTSL50 (£50 off)', code: 'BACTSL50', verified: true, detail: 'Minimum spend £699 — useless at the current sale price. Listed for completeness.' },
     ],
-    effectiveBest: { price: 708, how: '£719.99 − 2% cashback, + free Fast Charger 2 (− £50 if promo live)' },
+    effectiveBest: { price: 483, how: '£499 Weekly Deal − 3.15% TopCashback (confirm batch spec first)' },
   },
   reviews: {
     outlets: [
-      { name: 'T3 (first ride)', score: 'Positive', quote: 'Truly impressive… gives Segway and Apollo a run for their money.', url: 'https://www.t3.com/active/electric-scooters/i-rode-the-xiaomi-scooter-6-ultra-and-it-gives-segway-and-apollo-a-run-for-their-money' },
-      { name: 'ScooterRank', score: '65/100', quote: 'Covers the essentials well — real-world 60–65km range, comfort 8.3/10; power lags true performance scooters.', url: 'https://scooterrank.com/scooters/xiaomi-electric-scooter-6-ultra' },
+      { name: 'TechGearLab (via meta-review)', score: 'Tested', quote: '26.3mph top speed measured — but "goes much slower up hills".', url: 'https://www.duodianbike.com/blogs/blog/isinwheel-gt2-deep-review-a-budget-off-roader-with-caveats' },
+      { name: 'DuoDian (meta-review)', score: 'Caveats', quote: 'Good top-speed value… falls short of its all-terrain marketing. QC lottery: flat tyres on arrival, missing hooks, peeling grip tape.', url: 'https://www.duodianbike.com/blogs/blog/isinwheel-gt2-deep-review-a-budget-off-roader-with-caveats' },
     ],
-    youtube: 'MWC first-rides were glowing — plush suspension, punchy Boost acceleration, solid build. "Feels like a legal tank" is the recurring framing: heavy, planted, speed-capped. No long-term tests yet.',
-    reddit: 'Too new for meaningful owner threads — launched Feb/Mar 2026. Early mi.com owner reviews praise commuting performance under heavy loads; complaints centre on weight and price.',
+    youtube: '"This Off-Road Scooter Shouldn’t Be This Fast" is the tone — impressed by speed-per-pound on flat ground, unconvinced by the off-road/climbing marketing. Beware: many top-ranking GT2 "reviews" are isinwheel’s own blog posts.',
+    reddit: 'Essentially absent from r/ElectricScooters — no substantive owner threads found. Low community presence means a weak peer-support and modding knowledge base if something goes wrong. Amazon US owners (4.4/5, 1,200+ reviews) are much happier than Amazon UK’s tiny sample (2.6/5).',
     sentiment: {
       positive: [
-        { theme: 'Longest real range here', weight: 4 },
-        { theme: 'Plush dual suspension', weight: 4 },
-        { theme: 'Acceleration & Boost torque', weight: 4 },
-        { theme: '140kg load headroom', weight: 3 },
+        { theme: 'Speed & spec per pound', weight: 4 },
+        { theme: 'Big 720Wh battery at £539', weight: 4 },
+        { theme: '150kg load headroom', weight: 3 },
+        { theme: 'Fast UK delivery', weight: 3 },
       ],
       negative: [
-        { theme: '33.7kg — the heaviest', weight: 5 },
-        { theme: '10.5h standard charge', weight: 3 },
-        { theme: 'No track record yet', weight: 3 },
-        { theme: 'mi.com-only availability', weight: 2 },
+        { theme: 'QC lottery out of the box', weight: 4 },
+        { theme: 'Hill claim vs 15% reality', weight: 4 },
+        { theme: 'Support & returns battles', weight: 3 },
+        { theme: '6-month electrics warranty', weight: 3 },
       ],
     },
   },
   pros: [
-    { title: 'The range king', detail: '585Wh and class-best efficiency: ~28–34 real miles at your weight — multi-day commuting per charge.', strength: 3 },
-    { title: 'Nearly matches the Segway on hills', detail: '1,200W peak + Boost mode + 45Nm; 25% claimed gradient with 50kg of load headroom.', strength: 3 },
-    { title: 'Plushest Xiaomi ride ever', detail: 'Dual swing-arm suspension front and rear + 12″ all-terrain tyres — T3 loved it.', strength: 2 },
-    { title: 'Free Fast Charger 2 at launch', detail: 'Fixes its worst spec (10.5h charging → 3h20) while the gift promotion lasts.', strength: 2 },
+    { title: 'Aggressive value', detail: '720Wh, 11″ rubber, suspension and indicators for ~£483 effective — half the Segway’s money.', strength: 3 },
+    { title: '150kg max load', detail: 'You plus full camera kit is barely two-thirds load — frame headroom the price doesn’t suggest.', strength: 2 },
+    { title: 'Removable battery', detail: 'The only scooter here where the battery comes out to charge indoors.', strength: 2 },
+    { title: 'Genuinely quick on the flat', detail: '26.3mph tested (private land only) — the motor isn’t the bottleneck on level ground.', strength: 1 },
   ],
   cons: [
-    { title: '33.7kg — the heaviest here', detail: 'Nine kilos more than the Segway. Strictly a wheel-it machine; stairs are out.', strength: 3 },
-    { title: 'Zero track record', detail: 'No long-term reviews or owner history anywhere yet — you’d be an early adopter.', strength: 2 },
-    { title: 'Single-channel purchase', detail: 'mi.com/uk only — no Currys-style walk-in returns relationship.', strength: 2 },
-    { title: 'Glacial standard charging', detail: '10.5 hours if you miss the fast-charger gift.', strength: 1 },
+    { title: 'Marketing you can’t trust', detail: '"35°" hills ≈ 15% real; "IP65" is battery-only; three different motor ratings for one product name.', strength: 3 },
+    { title: 'Splash-proof, not rain-proof', detail: 'IPX4–5 overall and isinwheel advises against prolonged wet exposure — a gamble as sole transport in Southampton.', strength: 3 },
+    { title: '6-month warranty on everything that matters', detail: 'Battery, motor, controller — the expensive failures — get half the cover, and Trustpilot shows returns can be a fight.', strength: 3 },
+    { title: 'QC lottery', detail: 'Arrivals with flat tyres, missing parts, maladjusted brakes; UK OPSS recalled an earlier isinwheel model over a fire risk (2021).', strength: 2 },
   ],
   verdict: {
-    rank: 2,
-    headline: 'The range monster — best if miles matter most.',
+    rank: 3,
+    headline: 'The gamble — fine weather value, wrong tool for your winters.',
     text: [
-      'The corrected sums make this the proper runner-up: 585Wh (within a whisker of the Segway), the longest real-world range of the four, near-Segway climbing, and genuinely plush dual suspension — for £100 less than the G3 E. If your photography days mean long cross-town mileage, this is the one that never makes you count percent. What holds it back for you: it’s 9kg heavier than the Segway with none of its adjustability or track record, nobody has owned one through a winter yet, and buying is mi.com-only. A very good scooter that asks you to be an early adopter; the Segway asks nothing.',
+      'Judged purely on the spec sheet, the GT2 embarrasses scooters costing £300 more. Judged on the evidence, it’s a different machine: the hill claim collapses from "35°" to about 15% real at your weight, the waterproofing headline covers only the battery, the electrics carry a 6-month warranty, and delivery is a QC coin-flip that Trustpilot suggests you don’t want to lose. If you were a 70kg fair-weather rider with £500, this would be a genuinely smart buy. As a 90kg, all-weather, no-backup-vehicle commuter in a hilly city, you’d be betting your daily mobility on the exact scenarios — steep, wet, warranty — where this scooter is weakest.',
     ],
   },
 }
 
-const flex = {
-  id: 'flex',
-  brand: 'Pure Electric',
-  name: 'Pure Advance Flex',
-  shortName: 'Pure Advance Flex',
+const g4 = {
+  id: 'g4',
+  brand: 'KuKirin',
+  name: 'KuKirin G4',
+  shortName: 'KuKirin G4',
   color: '#9085e9',
   colorSoft: 'rgba(144, 133, 233, 0.14)',
-  tagline: 'The clever one — folds like a Brompton, rides like nothing else.',
-  headline: { range: '~12 mi', weight: '16.2 kg', price: '£699' },
+  tagline: 'The range monster — 1,200Wh and real 35-mile days, but allergic to rain.',
+  headline: { range: '~32 mi', weight: '~37–41 kg', price: '£739' },
   images: [
-    { src: '/images/pure-advance-flex-2.jpg', alt: 'Pure Advance Flex unfolded — lifestyle shot' },
-    { src: '/images/pure-advance-flex-1.jpg', alt: 'Pure Advance Flex folded to cabin-bag size — studio shot' },
-    { src: '/images/pure-advance-flex-3.jpg', alt: 'Pure Advance Flex folded in a living room' },
+    { src: '/images/kukirin-g4-1.jpg', alt: 'KuKirin G4 — side profile studio view' },
+    { src: '/images/kukirin-g4-2.jpg', alt: 'KuKirin G4 — front three-quarter view showing headlight cluster' },
+    { src: '/images/kukirin-g4-3.jpg', alt: 'Rider posing with the KuKirin G4 at night' },
   ],
   specs: {
-    peakPower: { display: '710 W', num: 710, note: 'Pure’s current spec sheet quotes "924W max input power"; 710W peak output is the like-for-like figure. Weakest motor here either way.' },
-    nominalPower: { display: '500 W', num: 500 },
-    batteryWh: { display: '342 Wh', num: 342, note: 'The smallest tank by far — and it’s not removable, so charging means bringing the whole scooter to a socket.' },
-    rangeClaimed: { display: '25 mi / 40 km', num: 25, note: 'Pure’s own page claims up to 52km in "optimal conditions" — reviewers called that figure unrealistic.' },
-    rangeReal: { display: '~10–14 mi', num: 12, note: 'ebiketips got ~15mi on a hilly course; a heavier tester managed ~10mi. Enough for a short commute, not for range anxiety-free days.' },
-    topSpeed: { display: '15.5 mph', num: 15.5 },
-    hillGrade: { display: '19%', num: 19, note: 'ebiketips rated the platform the best hill-climber among comparable commuters they tested — steady rather than explosive at 90kg.' },
-    chargeTime: { display: '~6 h', num: 6 },
-    weight: { display: '16.2 kg', num: 16.2 },
-    maxLoad: { display: '120 kg (incl. luggage)', num: 120 },
-    ipRating: { display: 'IP65', note: 'Dust-tight plus water jets — the only full dust rating here, with wraparound mudguards designed for British rain.' },
-    folded: { display: '57 × 30 × 62 cm', note: 'Cabin-bag size. Folds in half in 5 steps and rolls while folded — nothing else here is remotely as portable.' },
-    warranty: { display: '1 yr (UK company)', note: 'Shortest warranty of the four; support is courier + email based from a UK (Bristol) company. £40 courier/diagnostic fee out of warranty.' },
-    tyres: { display: '10″ × 2.5″ tubeless' },
-    brakes: { display: 'Front enclosed drum + regen (KERS)', note: 'Weaker outright than discs, but the enclosed drum shrugs off winter grit — a genuinely good wet-climate choice.' },
-    suspension: { display: 'None — tyres + stance only' },
-    lights: { display: '150-lm headlight, footrest tail lights, indicators', note: 'Indicators in the grips and footpads with audible feedback — the most visible lighting package here.' },
-    extras: { display: 'App lock, cruise, Pure Control stability', note: 'No Find My / GPS tracking — a real gap for primary-transport use.' },
+    peakPower: { display: '2,000 W (rated)', num: 2000, note: 'KuKirin publishes only one figure — "rated 2000W" — with no verified nominal/peak split. Real-world it behaves like a strong single motor: ≥38Nm, GPS-verified 38–41mph unrestricted.' },
+    nominalPower: { display: 'Unpublished', num: 0, note: 'No honest nominal figure exists. Torque ≥38Nm is the only published performance number.' },
+    batteryWh: { display: '1,200 Wh', num: 1200, note: '60V 20Ah — double the Segway. Cell brand unpublished (assume generic); ~500 cycles claimed.' },
+    rangeClaimed: { display: '46 mi / 75 km', num: 46 },
+    rangeReal: { display: '~30–36 mi', num: 32, note: 'Ebike Escape: 30 miles used ~70% battery (75kg rider, hills). Hard riding at speed drops it to 25–30mi. Still the longest legs here by a distance.' },
+    topSpeed: { display: '~40 mph unrestricted', num: 40, note: 'Three modes: 12.5/25/43mph. GPS tests show 38–41mph. No 15.5mph UK mode — and mechanical brakes reviewers call marginal above 30mph.' },
+    hillGrade: { display: '20° claimed', num: 20, note: 'Community verdict: holds momentum on moderate climbs but "lacks torque to launch uphill from a standstill" — hills are the G4’s known weakness for heavier riders.' },
+    chargeTime: { display: '10–12 h', num: 11, note: 'A 2A charger into 1,200Wh. No dual-charger or fast-charge option exists. Overnight, every night.' },
+    weight: { display: '~37–41.5 kg', num: 39, note: 'KuKirin’s own pages list 35.5, 37 and 41.5kg. Whichever is true: this is not a scooter you lift.' },
+    maxLoad: { display: '120 kg', num: 120 },
+    ipRating: { display: 'IPX4 — splash only', note: 'KuKirin’s own blog: fine for "light rain, road splashes, morning dew"; avoid downpours and puddles. Warranty explicitly excludes ALL moisture damage. Loco Scooters sells £59/yr water-damage cover — read that as a confession.' },
+    folded: { display: '134 × 55 × 66 cm', note: 'Big even folded, and with no stem latch to hold it shut for carrying.' },
+    warranty: { display: '1 yr (water excluded)', note: 'Claims handled by shipping you parts to fit yourself; no UK repair centre. Buying from Loco Scooters (Trustpilot 5★, own repair centre) is the smarter route.' },
+    tyres: { display: '11″ tubeless off-road, 90mm wide', note: 'Wide, cushioned and tubeless — genuinely good rubber for broken tarmac.' },
+    brakes: { display: 'Cable discs + regen', note: '140–160mm mechanical discs. Reviewers: adequate at commuter speeds, inadequate above 30mph; community fits upgraded pads on day one.' },
+    suspension: { display: 'Front + rear springs', note: 'Comfortable at cruise; speed-wobble reports around 30mph from some owners.' },
+    lights: { display: '6-LED set: head, brake, indicators' },
+    extras: { display: 'Touchscreen dash, key-start — no app', note: 'No Find My, no traction control, no consumer app. The touchscreen is reviewed as unresponsive.' },
   },
-  scores: { range: 4, hills: 5, rain: 9, ride: 6, portability: 9, value: 6 },
+  scores: { range: 9, hills: 6, rain: 3, ride: 7, portability: 1, value: 7 },
   price: {
-    rrp: 899,
+    rrp: 849,
     retailers: [
-      { name: 'Pure Electric direct', price: 699, url: 'https://www.pureelectric.com/products/pure-advance-flex-electric-scooter', note: 'In stock, both colours, 0% APR finance. Launched at £1,099 in 2023.' },
-      { name: 'Pure "Reboxed" refurb', price: 599, url: 'https://www.pureelectric.com/products/flex-reboxed', note: '6-month warranty, 30-day returns — 22 units in stock at check.' },
-      { name: 'Halfords', price: 799, url: 'https://www.halfords.com/scooters/electric-scooters/pure-advance-flex-electric-scooter-platinum-silver-214123.html', note: 'Was £899 — £100 off.' },
-      { name: 'Currys', price: 899, url: 'https://www.currys.co.uk/products/pure-electric-pure-advance-flex-electric-folding-scooter-platinum-silver-10250521.html', note: 'Full RRP — but 10.5% TopCashback applies (~£820 effective).' },
-      { name: 'Argos', price: 899, url: 'https://www.argos.co.uk/product/4746937', note: 'Full RRP, free delivery.' },
+      { name: 'KuKirin UK official', price: 739, url: 'https://kukirin.co.uk/products/kukirin-g4-electric-scooter', note: '"Was £1,059" is an inflated anchor — street price elsewhere is £759–850. UK warehouse, free shipping.' },
+      { name: 'Loco Scooters', price: 759, url: 'https://locoscooters.co.uk/products/kugoo-g4', note: 'Trustpilot 5★ specialist with own repair centre + optional £59/yr water-damage cover. Worth the £20.' },
+      { name: 'Rapid Scooter (London)', price: 849.99, url: 'https://rapidscooter.co.uk', note: 'Two London branches, Klarna finance.' },
+      { name: 'Amazon UK', price: null, url: 'https://www.amazon.co.uk/dp/B0GS1V4LRM', note: 'Prime-eligible listing exists; price unverified at research time.' },
     ],
     deals: [
-      { label: 'Newsletter code: 5% off at Pure', code: 'via signup', verified: true, detail: '"GET 5% OFF YOUR NEXT RIDE" banner live on pureelectric.com → £664.05. Don’t stack with cashback.' },
-      { label: 'TopCashback: 4.2% new customer (Advance range)', verified: true, detail: '~£24 back on £699 — the newsletter code is worth more; pick one.' },
-      { label: 'Blue Light Card: up to 7% at Halfords', verified: false, detail: 'E-scooter eligibility has exclusions — check before relying on it.' },
-      { label: 'Reboxed refurb at £599', verified: true, detail: 'The cheapest way into this platform, with a 6-month warranty trade-off.' },
+      { label: 'Mid-Year sale: £739 at kukirin.co.uk', verified: true, detail: 'Live 6 Jul 2026. Newsletter promises coupons but states no percentage.' },
+      { label: 'Loco water-damage warranty £59/yr', verified: true, detail: 'Unique among all retailers in this comparison — and for a rainy city, arguably essential with this scooter.' },
+      { label: 'No cashback exists', verified: true, detail: 'Neither TopCashback nor Quidco lists KuKirin or Loco Scooters.' },
     ],
-    effectiveBest: { price: 664, how: '£699 direct − 5% newsletter code' },
+    effectiveBest: { price: 739, how: '£739 at kukirin.co.uk (or £818 at Loco with water cover — the honest price for your use)' },
   },
   reviews: {
     outlets: [
-      { name: 'T3', score: 'Platinum', quote: 'Visibly better — innovative fold, premium build. Only gripe: no carry handle.', url: 'https://www.t3.com/reviews/pure-advance-flex-e-scooter-review' },
-      { name: 'Stuff', score: '★★★★★', quote: 'Innovative, safe, packed with premium features — the king of e-scooters.', url: 'https://www.stuff.tv/review/pure-advance-flex-electric-scooter-review/' },
-      { name: 'ebiketips', score: '8/10', quote: 'Innovation and sturdy manufacture make for a safe and fun e-scooter.', url: 'https://road.cc/ebiketips/content/reviews/e-scooter/pure-advance-4747' },
+      { name: 'Ebike Escape', score: '8.7/10', quote: 'Smooth acceleration, great suspension and value — but mechanical discs are inadequate above 30mph.', url: 'https://ebikeescape.com/kukirin-g4-review/' },
+      { name: 'Hobarts', score: 'Positive', quote: 'Unbeatable combination of speed, range and affordability — with an unresponsive touchscreen and 10–12h charging.', url: 'https://hobartsreviews.com/e-scooters/kukirin-g4-review/' },
+      { name: 'DuoDian (2026)', score: 'Mixed', quote: 'Speed on a budget for flatland commuters comfortable with DIY maintenance — not recommended for hilly terrain.', url: 'https://www.duodianbike.com' },
     ],
-    youtube: 'Strongly positive commuter verdicts — the fold and forward stance are seen as genuinely different and good. Recurring theme: real range is well below the claim; it’s no speed machine.',
-    reddit: 'Direct Reddit data unavailable (crawler-blocked); wider community consensus treats Pure as a safe, beginner-friendly UK commuter brand rather than a performance one. Trustpilot (~15k reviews) mixes fast-resolution stories with slow-email complaints.',
+    youtube: 'GPS consensus: 38–41mph real top speed. Reviewers like the ride and value; every serious one flags the brakes, the weight and the charge time.',
+    reddit: 'Genuinely mixed (redditrecs): "5,000+ miles, solid AF" sits next to "pretty shit… sluggish, an ugly brick" and 30mph speed-wobble reports. Brand-level: "Kukirin skimps on quality and reliability, not on marketing" — but parts availability gets consistent praise.',
     sentiment: {
       positive: [
-        { theme: 'Fold & portability', weight: 5 },
-        { theme: 'Stability of forward stance', weight: 4 },
-        { theme: 'Rain-ready design (IP65)', weight: 4 },
-        { theme: 'Safety lighting & indicators', weight: 3 },
+        { theme: 'Range — 1,200Wh is real', weight: 5 },
+        { theme: 'Comfort at cruise (11″ + springs)', weight: 4 },
+        { theme: 'Spare parts actually available', weight: 3 },
+        { theme: 'Value vs performance brands', weight: 3 },
       ],
       negative: [
-        { theme: 'Real range ~half the claim', weight: 5 },
-        { theme: 'Underpowered for big hills', weight: 3 },
-        { theme: 'Stem wobble develops with use', weight: 3 },
-        { theme: '1-year warranty only', weight: 2 },
+        { theme: 'Rain sensitivity (IPX4)', weight: 5 },
+        { theme: '10–12h charging, no fast option', weight: 4 },
+        { theme: 'QC variability & display faults', weight: 3 },
+        { theme: 'Brakes marginal for its speed', weight: 3 },
       ],
     },
   },
   pros: [
-    { title: 'Transforms your storage problem', detail: 'Cabin-bag fold, 16.2kg, rollable when folded — train, café, studio, hallway: it just comes along.', strength: 3 },
-    { title: 'Designed for British rain', detail: 'IP65, enclosed drum brake, proper mudguards, grippy tubeless tyres.', strength: 3 },
-    { title: 'Uniquely stable stance', detail: 'Feet side-by-side facing forward — better shoulder checks, more natural balance.', strength: 2 },
-    { title: 'UK company, UK design', detail: 'Bristol-based, sold via Halfords/Argos/Currys with a refurb programme.', strength: 1 },
+    { title: 'Twice the battery of anything here', detail: '1,200Wh = real 30–36 mile days at your weight. Multi-day photography rounds on one charge.', strength: 3 },
+    { title: 'Comfortable, planted cruiser', detail: 'Wide 11″ tubeless rubber, dual springs, big deck — very stable at commuter speeds.', strength: 2 },
+    { title: 'Fixable', detail: 'Controllers, displays, throttles all purchasable in the UK (even on Amazon) — rare at this price.', strength: 2 },
+    { title: 'Indicators and a proper light set', detail: '6-LED system with turn signals front and rear.', strength: 1 },
   ],
   cons: [
-    { title: 'Range is the dealbreaker', detail: '~10–14 real miles at your weight. As sole transport, that’s daily charge anxiety.', strength: 3 },
-    { title: 'Weakest motor of the four', detail: '710W peak climbs steadily but slowly at 90kg on real hills.', strength: 3 },
-    { title: 'Stem wobble is a known thing', detail: 'Common enough that Pure publishes an official fix guide; needs periodic torquing.', strength: 2 },
-    { title: '1-year warranty', detail: 'Half what Segway and Xiaomi offer, from a company still finding profitability.', strength: 2 },
+    { title: 'Splash-proof only — in your rainiest use case', detail: 'IPX4, moisture damage excluded from warranty, known connector-corrosion failure path (E-003/E-006 errors).', strength: 3 },
+    { title: 'Weak uphill from a standstill', detail: 'Community consensus: hills are its weakness — holds momentum, bogs on steep starts at 90kg+.', strength: 3 },
+    { title: '10–12 hour charges', detail: 'The price of 1,200Wh on a 2A brick. Miss a night and you’re grounded.', strength: 2 },
+    { title: '~40kg and no stem latch', detail: 'Heaviest here by miles; effectively immovable except on its wheels.', strength: 2 },
   ],
   verdict: {
     rank: 4,
-    headline: 'Brilliant — for a different Ryan.',
+    headline: 'Magnificent range, but Southampton rain is its kryptonite.',
     text: [
-      'The Flex is the most inventive scooter here and the best rain-proofed by design philosophy. If your commute were 4 flat miles ending at a luggage rack, it would win outright. But as your only vehicle, at 90kg, in a hilly city, its 342Wh battery and 710W motor are simply the wrong numbers: real-world range around 10–14 miles with charge-anxiety, and steady-not-strong climbs. Keep it on the list only if the fold is worth more to you than everything else — and if so, the £599 Reboxed unit is the smart buy.',
+      'The G4 does one thing better than anything in this comparison: distance. 1,200Wh is honest 30-plus-mile days at your weight, and owners rack up thousands of miles on them. But look at it through your constraints and it unravels: splash-only IPX4 with a warranty that names moisture as excluded (its most committed UK dealer literally sells rain insurance for it), hills-from-standstill as its acknowledged weak point, half-day charge times, and 40kg of scooter with mechanical brakes rated for less speed than it delivers. If you had a dry garage, flat terrain and a second vehicle, the G4 would be a bargain workhorse. You have none of those three.',
     ],
   },
 }
 
-export const SCOOTERS = [g3e, xiaomi6max, xiaomi6ultra, flex]
+export const SCOOTERS = [g3e, xiaomi6max, gt2, g4]
 
 export const VERDICT = {
   intro:
-    'Ranked for one specific rider: Ryan, ~90kg, Southampton, no car, camera case in tow, rain and hills non-negotiable. A different rider would get a different order — that’s what the sliders above are for.',
+    'Ranked for one specific rider: Ryan, ~90kg, Southampton, no car, camera case in tow, rain and hills non-negotiable, 11–12″ tyres required. A different rider would get a different order — that’s what the sliders above are for.',
   coda: [
-    'One honest footnote on the whole exercise: the Navee GT3 Max and NIU KQi 300X both looked like strong £600–900 contenders on paper, and both fell out of this comparison for the same reason — you can’t actually buy either from a UK retailer right now (Navee’s EU store won’t ship here; NIU’s excludes the UK too). Availability was one of your criteria, and it quietly does a lot of filtering in this market.',
-    'And the boring-but-important bit: whichever you choose, buy from a UK retailer rather than direct where possible (Consumer Rights Act beats any warranty inbox), activate cashback before you click, and remember private e-scooters are still only legal on private land in the UK — worth knowing while the long-promised legislation keeps not arriving.',
+    'What this second pass proved: the 11–12″ tyre requirement plus "buyable in the UK today" is a brutal filter. The Navee GT3 Max and NIU KQi 300X fell at availability (no UK channel ships them right now). The only true 12-inch alternative brand — the British 8TEV B12 Classic, £699, IPX6 and a lovely 17kg — runs a 250W-nominal motor that has no business hauling 90kg up a Southampton hill, so it never made the cut. And the budget 11-inchers that did make the cut (isinwheel, KuKirin) both turned out to trade exactly the things your use case can’t trade: honest waterproofing, honest hill figures, and warranties that mean something.',
+    'The boring-but-important bit stands: whichever you choose, buy through a UK retailer with Consumer Rights Act standing (Currys for the Segway; Loco Scooters if you insist on the G4), activate cashback before you click, and remember private e-scooters remain legal only on private land in the UK while the long-promised legislation keeps not arriving.',
   ],
 }
