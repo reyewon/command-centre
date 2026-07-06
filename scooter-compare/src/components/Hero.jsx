@@ -7,6 +7,7 @@ const CONTEXT = [
   { icon: '📷', label: 'Photography gear in tow' },
   { icon: '🌧️', label: 'Rain is non-negotiable' },
   { icon: '⛰️', label: 'Hills on the route' },
+  { icon: '🛞', label: '11–12″ tyres only' },
 ]
 
 const NAV = [
